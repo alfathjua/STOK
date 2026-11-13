@@ -11,7 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        
+        Schema::create('user_profiles', function (Blueprint $table) {
+            $table->id();
+            $table->string('images')->nullable();
+            $table->string('wa')->nullable();
+            $table->date('birthday')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        
+        Schema::dropIfExists('user_profiles');
     }
 };
