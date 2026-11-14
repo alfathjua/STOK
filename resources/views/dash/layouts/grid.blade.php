@@ -16,11 +16,9 @@
     @foreach ($features as $feature)
         <a href="{{ route($feature['route']) }}"
            class="group flex flex-col items-center gap-2 bg-white rounded-xl border border-slate-200 p-3 sm:p-4 hover:border-blue-400 hover:shadow-sm transition">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600">
-                    {!! $gridIcons[$feature['icon']] !!}
-                </svg>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 group-hover:text-blue-700 transition">
+                {!! $gridIcons[$feature['icon']] !!}
+            </svg>
             <span class="text-xs sm:text-sm font-medium text-slate-700 text-center leading-tight">{{ $feature['label'] }}</span>
         </a>
     @endforeach
