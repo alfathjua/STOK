@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockInController;
 use App\Http\Controllers\StockOutController;
+use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -60,5 +61,6 @@ Route::middleware('auth')->group(function () {
     // Director-only
     Route::middleware('role:director')->group(function () {
         Route::get('/company', fn () => view('dash.profile.company'))->name('profile.company');
+        Route::get('/track', [TrackController::class, 'index'])->name('track.index');
     });
 });

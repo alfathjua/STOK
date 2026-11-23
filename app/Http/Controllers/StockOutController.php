@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Stock;
 use App\Models\StockOut;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -71,6 +72,8 @@ class StockOutController extends Controller
             // Kurangi sisa stok
             $stock->decrement('qty_remaining', $qty);
         });
+
+        ActivityLogger::create('Stok Keluar', 'Mengeluarkan stok ke perusahaan penerima.');
 
         return redirect()->route('stock-out.index')
             ->with('success', 'Stok keluar berhasil dicatat.');

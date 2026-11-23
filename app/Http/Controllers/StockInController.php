@@ -6,6 +6,7 @@ use App\Models\DetailStock;
 use App\Models\Receipt;
 use App\Models\Stock;
 use App\Models\StockIn;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -87,6 +88,8 @@ class StockInController extends Controller
             }
         });
 
+        ActivityLogger::create('Stok Masuk', 'Menambahkan pencatatan stok masuk baru.');
+
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil disimpan.');
     }
@@ -156,6 +159,8 @@ class StockInController extends Controller
             }
         });
 
+        ActivityLogger::edit('Stok Masuk', 'Memperbarui data pencatatan stok masuk.');
+
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil diperbarui.');
     }
@@ -176,6 +181,8 @@ class StockInController extends Controller
 
             $stockIn->delete();
         });
+
+        ActivityLogger::delete('Stok Masuk', 'Menghapus pencatatan stok masuk.');
 
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil dihapus.');
