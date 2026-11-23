@@ -3,25 +3,28 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'username', 'role', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $fillable = [
+        'name',
+        'email',
+        'username',
+        'phone',
+        'avatar',
+        'role',
+        'password',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -36,5 +39,21 @@ class User extends Authenticatable
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class)->latest();
+    }
+
+    /**
+     * Kunci-kunci foreman yang sudah pernah dipakai user ini saat register.
+     */
+    public function foremanKeys(): HasMany
+    {
+        return $this->hasMany(ForemanKey::class, 'used_by');
+    }
+
+    /**
+     * Direktori penyimpanan foto profil berdasarkan role.
+     */
+    public function getAvatarDirectoryAttribute(): string
+    {
+        return $this->role === 'director' ? 'fp-director' : 'fp-foreman';
     }
 }

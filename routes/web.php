@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ForemanController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockInController;
 use App\Http\Controllers\StockOutController;
@@ -20,6 +23,11 @@ Route::get('/', [AuthController::class, 'index'])->name('index');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
 
+// Register foreman (public — butuh kunci valid)
+Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.store');
+Route::get('/register/check-username', [RegisterController::class, 'checkUsername'])->name('register.check-username');
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
@@ -32,7 +40,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Serve private files (proof & receipts)
+    // Serve private files (proof, receipts, avatars)
     Route::get('/private-file/{path}', function (string $path) {
         if (! Storage::disk('local')->exists($path)) {
             abort(404);
@@ -55,12 +63,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/stock-out', [StockOutController::class, 'store'])->name('stock-out.store');
     Route::get('/stock-out/history', [StockOutController::class, 'history'])->name('stock-out.history');
 
-    // Profile
-    Route::get('/profile', fn () => view('dash.profile.user'))->name('profile.user');
+    // Profile (semua role)
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.user');
+    Route::post('/profile/info', [ProfileController::class, 'updateInfo'])->name('profile.update-info');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 
     // Director-only
     Route::middleware('role:director')->group(function () {
-        Route::get('/company', fn () => view('dash.profile.company'))->name('profile.company');
         Route::get('/track', [TrackController::class, 'index'])->name('track.index');
+
+        // Data Mandor
+        Route::get('/foreman', [ForemanController::class, 'index'])->name('foreman.index');
+        Route::post('/foreman/generate-key', [ForemanController::class, 'generateKey'])->name('foreman.generate-key');
     });
 });
