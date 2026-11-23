@@ -47,7 +47,6 @@ Route::middleware('auth')->group(function () {
 
     // Stok Gudang
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
-    Route::put('/stock/{stock}', [StockController::class, 'update'])->name('stock.update');
 
     // Stok Keluar
     Route::get('/stock-out', fn () => view('dash.stock-out.index'))->name('stock-out.index');

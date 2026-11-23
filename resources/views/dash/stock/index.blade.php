@@ -9,8 +9,8 @@
         <div>
             <h2 class="text-base sm:text-lg font-semibold text-slate-800">Stok Gudang</h2>
             <p class="text-xs text-slate-500 mt-0.5">
-                Kelola jumlah sisa stok. Info barang hanya bisa diubah di
-                <a href="{{ route('stock-in.index') }}" class="text-blue-600 hover:underline">Stok Masuk</a>.
+                Informasi stok barang di gudang. Untuk mengubah data barang, gunakan
+                <a href="{{ route('stock-in.index') }}" class="text-blue-600 hover:underline">Input Stok Masuk</a>.
             </p>
         </div>
 
@@ -48,26 +48,11 @@
         @endif
     </div>
 
-    {{-- Flash success --}}
-    @if (session('success'))
-        <div class="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 flex-shrink-0">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            {{ session('success') }}
-        </div>
-    @endif
-
     @include('dash.stock.partials.list', [
         'stocks'       => $stocks,
         'selectedDate' => $selectedDate,
         'today'        => $today,
     ])
 </div>
-
-{{-- Modal edit qty — harus di luar container rounded agar fixed positioning tidak terjebak --}}
-@include('dash.stock.partials.modal-edit', [
-    'selectedDate' => $selectedDate,
-])
 
 @endsection
