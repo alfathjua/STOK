@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DetailStock extends Model
 {
@@ -32,6 +33,14 @@ class DetailStock extends Model
     public function stockIn(): BelongsTo
     {
         return $this->belongsTo(StockIn::class);
+    }
+
+    /**
+     * Stock records per tanggal untuk item ini.
+     */
+    public function stocks(): HasMany
+    {
+        return $this->hasMany(Stock::class);
     }
 
     /**

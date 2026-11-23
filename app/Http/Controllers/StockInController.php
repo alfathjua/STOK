@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\DetailStock;
 use App\Models\Receipt;
+use App\Models\Stock;
 use App\Models\StockIn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -73,6 +75,8 @@ class StockInController extends Controller
 
             $stockIn->details()->saveMany($items);
 
+            $this->syncStocksOnCreate($stockIn->fresh(['details']));
+
             if ($request->hasFile('receipts')) {
                 foreach ($request->file('receipts') as $file) {
                     Receipt::create([
@@ -125,6 +129,10 @@ class StockInController extends Controller
 
             $stockIn->update($data);
 
+            // Simpan snapshot qty lama (item_name → qty) sebelum dihapus
+            $oldDetails = $stockIn->details()->get(['item_name', 'qty'])
+                ->keyBy('item_name');
+
             $stockIn->details()->delete();
 
             $items = collect($request->items)->map(fn (array $item) => new DetailStock([
@@ -135,6 +143,8 @@ class StockInController extends Controller
             ]));
 
             $stockIn->details()->saveMany($items);
+
+            $this->syncStocksOnUpdate($stockIn->fresh(['details']), $oldDetails);
 
             if ($request->hasFile('receipts')) {
                 foreach ($request->file('receipts') as $file) {
@@ -169,6 +179,62 @@ class StockInController extends Controller
 
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil dihapus.');
+    }
+
+    /**
+     * Saat stok masuk BARU dibuat: buat record stocks untuk setiap detail
+     * dengan date = hari ini, qty_in = qty detail, qty_remaining = qty detail.
+     */
+    private function syncStocksOnCreate(StockIn $stockIn): void
+    {
+        $today = now()->toDateString();
+
+        foreach ($stockIn->details as $detail) {
+            Stock::updateOrCreate(
+                ['detail_stock_id' => $detail->id, 'date' => $today],
+                ['qty_in' => $detail->qty, 'qty_remaining' => $detail->qty]
+            );
+        }
+    }
+
+    /**
+     * Saat stok masuk di-UPDATE: sesuaikan qty_remaining di record stocks hari ini
+     * sebesar selisih qty baru vs qty lama.
+     *
+     * Contoh: stok lama masuk 400, sisa user di kelola stok = 20.
+     * User edit stok masuk jadi 500 (+100). Maka qty_remaining += 100 → 120.
+     * Jika dikurangi jadi 300 (-100). Maka qty_remaining -= 100 → max(0, 20-100) = 0.
+     *
+     * @param  Collection<string,DetailStock>  $oldDetails  keyed by item_name
+     */
+    private function syncStocksOnUpdate(StockIn $stockIn, Collection $oldDetails): void
+    {
+        $today = now()->toDateString();
+
+        foreach ($stockIn->details as $detail) {
+            $oldQty = (int) ($oldDetails->get($detail->item_name)?->qty ?? 0);
+            $newQty = $detail->qty;
+            $diff = $newQty - $oldQty;
+
+            $stock = Stock::where('detail_stock_id', $detail->id)
+                ->where('date', $today)
+                ->first();
+
+            if ($stock) {
+                // Adjust qty_in ke nilai baru; adjust qty_remaining by diff
+                $stock->qty_in = $newQty;
+                $stock->qty_remaining = max(0, $stock->qty_remaining + $diff);
+                $stock->save();
+            } else {
+                // Belum ada record hari ini — buat baru
+                Stock::create([
+                    'detail_stock_id' => $detail->id,
+                    'date' => $today,
+                    'qty_in' => $newQty,
+                    'qty_remaining' => max(0, $newQty),
+                ]);
+            }
+        }
     }
 
     /**

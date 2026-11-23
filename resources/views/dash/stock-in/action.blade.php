@@ -79,8 +79,8 @@
                 </button>
 
                 {{-- Preview foto baru dari potret --}}
-                <div id="proofPreviewWrap" class="hidden relative inline-block">
-                    <img id="proofPreview" src="#" alt="Preview"
+                <div id="proofPreviewWrap" class="hidden relative inline-block" style="display:none">
+                    <img id="proofPreview" src="" alt="Preview"
                          class="h-16 w-16 object-cover rounded-lg border border-slate-200">
                     <button type="button" onclick="clearProof()"
                             class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white flex items-center justify-center rounded-full text-xs hover:bg-red-600 transition">
@@ -430,7 +430,10 @@ document.addEventListener('DOMContentLoaded', updateGrandTotal);
 ════════════════════════════════════════ */
 function clearProof() {
     document.getElementById('proofInput').value = '';
-    document.getElementById('proofPreviewWrap').classList.add('hidden');
+    const wrap = document.getElementById('proofPreviewWrap');
+    wrap.style.display = 'none';
+    wrap.classList.add('hidden');
+    document.getElementById('proofPreview').src = '';
 }
 
 function deleteProofPreview() {
@@ -599,7 +602,9 @@ async function confirmPhoto() {
 
         // Show inline preview
         document.getElementById('proofPreview').src = dataUrl;
-        document.getElementById('proofPreviewWrap').classList.remove('hidden');
+        const proofWrap = document.getElementById('proofPreviewWrap');
+        proofWrap.style.display = '';
+        proofWrap.classList.remove('hidden');
 
     } else {
         // Append to receipt accumulator

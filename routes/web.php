@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockInController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -45,7 +46,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('stock-in', StockInController::class)->except(['show']);
 
     // Stok Gudang
-    Route::get('/stock', fn () => view('dash.stock.index'))->name('stock.index');
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::put('/stock/{stock}', [StockController::class, 'update'])->name('stock.update');
 
     // Stok Keluar
     Route::get('/stock-out', fn () => view('dash.stock-out.index'))->name('stock-out.index');

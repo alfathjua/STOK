@@ -1,21 +1,135 @@
-<div class="overflow-x-auto">
-    <table class="w-full text-sm">
-        <thead>
-            <tr class="text-left text-xs font-medium text-slate-400 border-b border-slate-200">
-                <th class="py-3 pr-4">#</th>
-                <th class="py-3 pr-4">Nama Item</th>
-                <th class="py-3 pr-4">Deskripsi</th>
-                <th class="py-3 pr-4">Qty</th>
-                <th class="py-3 pr-4">Harga</th>
-                <th class="py-3">Aksi</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-            <tr>
-                <td colspan="6" class="py-12 text-center text-slate-400">
-                    Belum ada data stok gudang.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+@php
+    use Carbon\Carbon;
+@endphp
+
+@if ($stocks->isEmpty())
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-slate-400">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+            </svg>
+        </div>
+        <p class="text-sm font-medium text-slate-600">Belum ada stok</p>
+        <p class="text-xs text-slate-400 mt-1">
+            Tambahkan stok melalui
+            <a href="{{ route('stock-in.create') }}" class="text-blue-600 hover:underline">Input Stok Masuk</a>.
+        </p>
+    </div>
+@else
+
+    {{-- Legend warna --}}
+    <div class="flex flex-wrap items-center gap-3 mb-4 text-xs text-slate-500">
+        <span class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded border-2 border-green-400 bg-green-50 inline-block"></span>
+            Sisa stok dari hari sebelumnya
+        </span>
+        <span class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded border-2 border-red-400 bg-red-50 inline-block"></span>
+            Stok habis dari hari sebelumnya
+        </span>
+        <span class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded border-2 border-slate-200 bg-white inline-block"></span>
+            Stok hari ini
+        </span>
+    </div>
+
+    <div class="space-y-3">
+        @foreach ($stocks as $stock)
+            @php
+                $detail       = $stock->detailStock;
+                $isToday      = $stock->date->toDateString() === $today;
+                $hasRemaining = $stock->qty_remaining > 0;
+
+                // Tentukan warna border card
+                if ($isToday) {
+                    $borderClass = 'border-slate-200';
+                    $badgeClass  = 'bg-blue-50 text-blue-700';
+                    $badgeLabel  = 'Hari ini';
+                } elseif ($hasRemaining) {
+                    $borderClass = 'border-green-400';
+                    $badgeClass  = 'bg-green-50 text-green-700';
+                    $badgeLabel  = 'Sisa dari ' . $stock->date->translatedFormat('d M Y');
+                } else {
+                    $borderClass = 'border-red-400';
+                    $badgeClass  = 'bg-red-50 text-red-700';
+                    $badgeLabel  = 'Habis · ' . $stock->date->translatedFormat('d M Y');
+                }
+
+                $totalValue = $detail->price * $stock->qty_remaining;
+            @endphp
+
+            <div class="border-2 {{ $borderClass }} rounded-xl p-4 transition hover:shadow-sm bg-white">
+                <div class="flex items-start justify-between gap-3">
+
+                    {{-- Info barang --}}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 class="text-sm font-semibold text-slate-800 truncate">
+                                {{ $detail->item_name }}
+                            </h3>
+                            <span class="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full {{ $badgeClass }}">
+                                {{ $badgeLabel }}
+                            </span>
+                        </div>
+
+                        @if ($detail->description)
+                            <p class="text-xs text-slate-400 mb-2 line-clamp-1">{{ $detail->description }}</p>
+                        @endif
+
+                        {{-- Stats row --}}
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                            <span>
+                                <span class="text-slate-400">Harga satuan:</span>
+                                <span class="font-medium text-slate-700">Rp {{ number_format($detail->price, 0, ',', '.') }}</span>
+                            </span>
+                            <span>
+                                <span class="text-slate-400">Masuk:</span>
+                                <span class="font-medium text-slate-700">{{ number_format($stock->qty_in, 0, ',', '.') }}</span>
+                            </span>
+                            <span>
+                                <span class="text-slate-400">Nilai sisa:</span>
+                                <span class="font-medium text-slate-700">Rp {{ number_format($totalValue, 0, ',', '.') }}</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Qty remaining + tombol edit --}}
+                    <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 leading-none mb-0.5">Sisa Stok</p>
+                            <p class="text-2xl font-bold leading-none
+                                {{ $stock->qty_remaining === 0 ? 'text-red-500' : 'text-slate-800' }}">
+                                {{ number_format($stock->qty_remaining, 0, ',', '.') }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onclick="openEditModal({{ $stock->id }}, '{{ addslashes($detail->item_name) }}', {{ $stock->qty_remaining }})"
+                            class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700
+                                   border border-blue-200 hover:border-blue-400 px-2.5 py-1.5 rounded-lg transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                            </svg>
+                            Edit Stok
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    {{-- Total summary footer --}}
+    @php
+        $totalItems     = $stocks->count();
+        $totalHabis     = $stocks->where('qty_remaining', 0)->count();
+        $totalAdaSisa   = $stocks->where('qty_remaining', '>', 0)->count();
+    @endphp
+    <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap gap-4 text-xs text-slate-500">
+        <span>Total item: <strong class="text-slate-700">{{ $totalItems }}</strong></span>
+        <span class="text-green-600">Ada sisa: <strong>{{ $totalAdaSisa }}</strong></span>
+        <span class="text-red-500">Habis: <strong>{{ $totalHabis }}</strong></span>
+    </div>
+
+@endif
+
