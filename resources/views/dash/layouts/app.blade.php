@@ -14,10 +14,14 @@
 
     // Sidebar menu items (desktop) — all features + company profile for director
     $menuItems = [
-        ['route' => 'dashboard',      'label' => 'Beranda',           'icon' => 'home'],
-        ['route' => 'stock-in.index',  'label' => 'Input Stok Masuk', 'icon' => 'in'],
-        ['route' => 'stock.index',     'label' => 'Stok Gudang',      'icon' => 'box'],
-        ['route' => 'stock-out.index', 'label' => 'Input Stok Keluar','icon' => 'out'],
+        ['route' => 'dashboard',       'label' => 'Beranda',           'icon' => 'home'],
+        ['route' => 'stock-in.index',  'label' => 'Input Stok Masuk',  'icon' => 'in'],
+        ['route' => 'stock.index',     'label' => 'Stok Gudang',       'icon' => 'box'],
+        ['route' => 'stock-out.index', 'label' => 'Input Stok Keluar', 'icon' => 'out',
+         'children' => [
+             ['route' => 'stock-out.history', 'label' => 'Riwayat Keluar', 'icon' => 'history'],
+         ],
+        ],
     ];
 
     if ($user->role === 'director') {
@@ -32,6 +36,7 @@
         'out'      => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 16.5V3m0 0 4.5 4.5M12 3 7.5 7.5" />',
         'building' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />',
         'logout'   => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />',
+        'history'  => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />',
     ];
 
     $initials = strtoupper(mb_substr($user->name, 0, 1));
@@ -54,7 +59,11 @@
     <div class="flex-1 flex flex-col bg-blue-900 overflow-hidden">
         <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
             @foreach ($menuItems as $item)
-                @php $isActive = request()->routeIs($item['route']); @endphp
+                @php
+                    $isActive     = request()->routeIs($item['route']);
+                    $hasChildren  = !empty($item['children']);
+                    $childActive  = $hasChildren && collect($item['children'])->contains(fn($c) => request()->routeIs($c['route']));
+                @endphp
                 <a href="{{ route($item['route']) }}"
                    title="{{ $item['label'] }}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
@@ -66,6 +75,25 @@
                         {{ $item['label'] }}
                     </span>
                 </a>
+
+                @if ($hasChildren)
+                    <div class="sidebar-label pl-3 space-y-0.5 overflow-hidden transition-all duration-200">
+                        @foreach ($item['children'] as $child)
+                            @php $childIsActive = request()->routeIs($child['route']); @endphp
+                            <a href="{{ route($child['route']) }}"
+                               title="{{ $child['label'] }}"
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition
+                                      {{ $childIsActive ? 'bg-blue-700 text-white' : 'text-slate-400 hover:bg-blue-800/70 hover:text-white' }}">
+                                <span class="w-4 h-4 flex-shrink-0 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                        {!! $icons[$child['icon']] !!}
+                                    </svg>
+                                </span>
+                                <span class="whitespace-nowrap overflow-hidden">{{ $child['label'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             @endforeach
         </nav>
     </div>

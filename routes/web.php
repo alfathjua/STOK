@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockInController;
+use App\Http\Controllers\StockOutController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -49,7 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
 
     // Stok Keluar
-    Route::get('/stock-out', fn () => view('dash.stock-out.index'))->name('stock-out.index');
+    Route::get('/stock-out', [StockOutController::class, 'index'])->name('stock-out.index');
+    Route::post('/stock-out', [StockOutController::class, 'store'])->name('stock-out.store');
+    Route::get('/stock-out/history', [StockOutController::class, 'history'])->name('stock-out.history');
 
     // Profile
     Route::get('/profile', fn () => view('dash.profile.user'))->name('profile.user');

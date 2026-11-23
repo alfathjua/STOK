@@ -44,6 +44,14 @@ class DetailStock extends Model
     }
 
     /**
+     * Semua pengeluaran stok untuk item ini.
+     */
+    public function stockOuts(): HasMany
+    {
+        return $this->hasMany(StockOut::class);
+    }
+
+    /**
      * Computed total for this line.
      */
     public function getTotalAttribute(): float

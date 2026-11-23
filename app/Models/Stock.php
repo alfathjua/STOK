@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Stock extends Model
 {
@@ -37,5 +38,13 @@ class Stock extends Model
     public function getHasRemainingStockAttribute(): bool
     {
         return $this->qty_remaining > 0;
+    }
+
+    /**
+     * Pengeluaran stok yang tercatat dari record stok ini.
+     */
+    public function stockOuts(): HasMany
+    {
+        return $this->hasMany(StockOut::class);
     }
 }
