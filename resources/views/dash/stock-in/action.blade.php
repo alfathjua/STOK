@@ -61,14 +61,30 @@
         </div>
 
         {{-- ───── 2. Foto Bukti Pembelian ───── --}}
-        <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
-            <h3 class="text-sm font-semibold text-slate-700 mb-1">Foto Bukti Pembelian</h3>
+        <div id="proofSection" class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
+            <h3 class="text-sm font-semibold text-slate-700 mb-1">
+                Foto Bukti Pembelian <span class="text-red-500">*</span>
+            </h3>
             <p class="text-xs text-slate-400 mb-4">Potret struk / nota saat transaksi di toko.</p>
 
-            {{-- Hidden file input — target inject dari modal kamera --}}
-            <input type="file" id="proofInput" name="proof" accept="image/*" class="hidden">
+            {{-- Hidden file input — bisa dari galeri atau kamera --}}
+            <input type="file" id="proofInput" name="proof" accept="image/*" class="hidden"
+                   onchange="onProofFileSelected(this)">
+
+            {{-- Error hint (muncul saat validasi gagal) --}}
+            <p id="proofError" class="hidden text-red-500 text-xs mb-3">Foto bukti pembelian wajib diunggah.</p>
 
             <div class="flex flex-wrap items-center gap-3">
+                {{-- Galeri --}}
+                <button type="button" onclick="document.getElementById('proofInput').click()"
+                        class="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-slate-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    Galeri
+                </button>
+
+                {{-- Kamera --}}
                 <button type="button" onclick="openCamera('proof')"
                         class="inline-flex items-center gap-2 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -78,8 +94,8 @@
                     Potret Pembelian
                 </button>
 
-                {{-- Preview foto baru dari potret --}}
-                <div id="proofPreviewWrap" class="hidden relative inline-block" style="display:none">
+                {{-- Preview foto baru (dari galeri atau kamera) — awalnya disembunyikan sepenuhnya --}}
+                <div id="proofPreviewWrap" style="display:none" class="relative inline-block">
                     <img id="proofPreview" src="" alt="Preview"
                          class="h-16 w-16 object-cover rounded-lg border border-slate-200">
                     <button type="button" onclick="clearProof()"
@@ -215,13 +231,18 @@
         </div>
 
         {{-- ───── 4. Foto Struk Barang ───── --}}
-        <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
-            <h3 class="text-sm font-semibold text-slate-700 mb-1">Foto Struk Barang</h3>
-            <p class="text-xs text-slate-400 mb-4">
+        <div id="receiptSection" class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
+            <h3 class="text-sm font-semibold text-slate-700 mb-1">
+                Foto Struk Barang <span class="text-red-500">*</span>
+            </h3>
+            <p class="text-xs text-slate-400 mb-1">
                 Foto struk / bukti pembelian per item. Bisa lebih dari satu. Maks. 2 MB per file.
             </p>
 
-            {{-- Existing receipts (edit mode) --}}
+            {{-- Error hint --}}
+            <p id="receiptError" class="hidden text-red-500 text-xs mb-3">Minimal satu foto struk wajib diunggah.</p>
+
+            {{-- Existing receipts (edit mode) --}
             @if ($isEdit && $stockIn->receipts->count())
                 <div id="existingReceiptsWrap" class="flex flex-wrap gap-2 mb-4">
                     @foreach ($stockIn->receipts as $receipt)
@@ -273,7 +294,7 @@
 
         {{-- Tombol submit --}}
         <div class="flex gap-3 pb-6">
-            <button type="submit"
+            <button type="button" onclick="submitForm()"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition">
                 {{ $isEdit ? 'Perbarui' : 'Simpan' }}
             </button>
@@ -284,6 +305,29 @@
         </div>
 
     </form>
+
+    {{-- Alert Modal Validasi --}}
+    <div id="validationAlert" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-4 bg-red-50 border-b border-red-100">
+                <div class="flex-shrink-0 w-9 h-9 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-red-800">Form Belum Lengkap</h3>
+            </div>
+            <div class="px-5 py-4">
+                <ul id="validationMessages" class="text-sm text-slate-700 space-y-1.5 list-disc list-inside"></ul>
+            </div>
+            <div class="px-5 pb-5">
+                <button type="button" onclick="closeValidationAlert()"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 rounded-lg transition text-sm">
+                    Perbaiki Isian
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- ══════════════════════════════════════
@@ -351,6 +395,144 @@
 @endpush
 
 <script>
+/* ════════════════════════════════════════
+   Validation & submit
+════════════════════════════════════════ */
+function submitForm() {
+    const errors = [];
+
+    // 1. Nama Toko / Supplier
+    const stockOrigin = document.getElementById('stock_origin');
+    if (!stockOrigin.value.trim()) {
+        errors.push('Nama Toko / Supplier wajib diisi.');
+        stockOrigin.classList.add('border-red-400');
+        stockOrigin.classList.remove('border-slate-300');
+    } else {
+        stockOrigin.classList.remove('border-red-400');
+        stockOrigin.classList.add('border-slate-300');
+    }
+
+    // 2. Foto Bukti Pembelian — wajib ada file baru atau foto lama (edit mode)
+    const proofInput        = document.getElementById('proofInput');
+    const proofExistingWrap = document.getElementById('proofExistingWrap');
+    const hasProofNew       = proofInput && proofInput.files && proofInput.files.length > 0;
+    const hasProofExisting  = proofExistingWrap !== null; // masih ada di DOM = belum dihapus
+    const proofErrorEl      = document.getElementById('proofError');
+    const proofSection      = document.getElementById('proofSection');
+
+    if (!hasProofNew && !hasProofExisting) {
+        errors.push('Foto Bukti Pembelian wajib diunggah.');
+        proofErrorEl.classList.remove('hidden');
+        proofSection.classList.add('border-red-300');
+        proofSection.classList.remove('border-slate-200');
+    } else {
+        proofErrorEl.classList.add('hidden');
+        proofSection.classList.remove('border-red-300');
+        proofSection.classList.add('border-slate-200');
+    }
+
+    // 3. Foto Struk Barang — wajib ada file baru atau struk lama (edit mode)
+    const receiptGalleryInput = document.getElementById('receiptGallery');
+    const existingReceipts    = document.querySelectorAll('.receipt-item');
+    const hasReceiptNew       = receiptGalleryInput && receiptGalleryInput.files && receiptGalleryInput.files.length > 0;
+    const hasReceiptExisting  = existingReceipts.length > 0;
+    const receiptErrorEl    = document.getElementById('receiptError');
+    const receiptSection    = document.getElementById('receiptSection');
+
+    if (!hasReceiptNew && !hasReceiptExisting) {
+        errors.push('Foto Struk Barang wajib diunggah minimal satu.');
+        receiptErrorEl.classList.remove('hidden');
+        receiptSection.classList.add('border-red-300');
+        receiptSection.classList.remove('border-slate-200');
+    } else {
+        receiptErrorEl.classList.add('hidden');
+        receiptSection.classList.remove('border-red-300');
+        receiptSection.classList.add('border-slate-200');
+    }
+
+    // 4. Data Barang — setiap baris wajib terisi nama, qty, dan harga
+    const rows = document.querySelectorAll('.item-row');
+    rows.forEach((row, idx) => {
+        const nameInput  = row.querySelector('input[name*="item_name"]');
+        const qtyInput   = row.querySelector('.qty-input');
+        const priceInput = row.querySelector('.price-input');
+        const rowLabel   = `Baris ${idx + 1}`;
+        let rowHasError  = false;
+
+        if (!nameInput?.value.trim()) {
+            errors.push(`${rowLabel}: Nama Barang wajib diisi.`);
+            nameInput?.classList.add('border-red-400');
+            nameInput?.classList.remove('border-slate-300');
+            rowHasError = true;
+        } else {
+            nameInput?.classList.remove('border-red-400');
+            nameInput?.classList.add('border-slate-300');
+        }
+
+        if (!qtyInput?.value || parseInt(qtyInput.value) < 1) {
+            errors.push(`${rowLabel}: Qty wajib diisi dan minimal 1.`);
+            qtyInput?.classList.add('border-red-400');
+            qtyInput?.classList.remove('border-slate-300');
+            rowHasError = true;
+        } else {
+            qtyInput?.classList.remove('border-red-400');
+            qtyInput?.classList.add('border-slate-300');
+        }
+
+        if (!priceInput?.value || parseFloat(priceInput.value) < 0) {
+            errors.push(`${rowLabel}: Harga Satuan wajib diisi.`);
+            priceInput?.classList.add('border-red-400');
+            priceInput?.classList.remove('border-slate-300');
+            rowHasError = true;
+        } else {
+            priceInput?.classList.remove('border-red-400');
+            priceInput?.classList.add('border-slate-300');
+        }
+    });
+
+    if (errors.length > 0) {
+        const list = document.getElementById('validationMessages');
+        list.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+        document.getElementById('validationAlert').classList.remove('hidden');
+
+        // Scroll ke field pertama yang error
+        const firstError = document.querySelector('.border-red-400');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+    }
+
+    document.getElementById('stockInForm').submit();
+}
+
+function closeValidationAlert() {
+    document.getElementById('validationAlert').classList.add('hidden');
+}
+
+// Tutup alert jika klik backdrop
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('validationAlert').addEventListener('click', function (e) {
+        if (e.target === this) closeValidationAlert();
+    });
+
+    // Reset border merah saat user mulai mengisi field yang error
+    document.getElementById('stock_origin').addEventListener('input', function () {
+        if (this.value.trim()) {
+            this.classList.remove('border-red-400');
+            this.classList.add('border-slate-300');
+        }
+    });
+
+    document.getElementById('itemRows').addEventListener('input', function (e) {
+        const input = e.target;
+        if (input.classList.contains('border-red-400') && input.value.trim()) {
+            input.classList.remove('border-red-400');
+            input.classList.add('border-slate-300');
+        }
+    });
+});
+
 /* ════════════════════════════════════════
    Item rows — dynamic add / remove / total
 ════════════════════════════════════════ */
@@ -428,12 +610,22 @@ document.addEventListener('DOMContentLoaded', updateGrandTotal);
 /* ════════════════════════════════════════
    Proof preview helpers
 ════════════════════════════════════════ */
+function onProofFileSelected(input) {
+    if (!input.files || !input.files[0]) { return; }
+    const url = URL.createObjectURL(input.files[0]);
+    document.getElementById('proofPreview').src = url;
+    document.getElementById('proofPreviewWrap').style.display = 'inline-block';
+
+    // Reset error state
+    document.getElementById('proofError').classList.add('hidden');
+    document.getElementById('proofSection').classList.remove('border-red-300');
+    document.getElementById('proofSection').classList.add('border-slate-200');
+}
+
 function clearProof() {
     document.getElementById('proofInput').value = '';
-    const wrap = document.getElementById('proofPreviewWrap');
-    wrap.style.display = 'none';
-    wrap.classList.add('hidden');
     document.getElementById('proofPreview').src = '';
+    document.getElementById('proofPreviewWrap').style.display = 'none';
 }
 
 function deleteProofPreview() {
@@ -450,7 +642,7 @@ function removeNewReceipt(btn) {
 function appendReceiptPreview(url) {
     const container = document.getElementById('receiptPreviews');
     const wrap = document.createElement('div');
-    wrap.className = 'relative group';
+    wrap.className = 'relative group receipt-preview-item';
     const idx = container.childElementCount + 1;
     wrap.innerHTML = `
         <img src="${url}" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
@@ -460,6 +652,11 @@ function appendReceiptPreview(url) {
             ✕
         </button>`;
     container.appendChild(wrap);
+
+    // Reset error state
+    document.getElementById('receiptError').classList.add('hidden');
+    document.getElementById('receiptSection').classList.remove('border-red-300');
+    document.getElementById('receiptSection').classList.add('border-slate-200');
 }
 
 function deleteReceiptAjax(receiptId) {
@@ -602,9 +799,12 @@ async function confirmPhoto() {
 
         // Show inline preview
         document.getElementById('proofPreview').src = dataUrl;
-        const proofWrap = document.getElementById('proofPreviewWrap');
-        proofWrap.style.display = '';
-        proofWrap.classList.remove('hidden');
+        document.getElementById('proofPreviewWrap').style.display = 'inline-block';
+
+        // Reset error state
+        document.getElementById('proofError').classList.add('hidden');
+        document.getElementById('proofSection').classList.remove('border-red-300');
+        document.getElementById('proofSection').classList.add('border-slate-200');
 
     } else {
         // Append to receipt accumulator
