@@ -4,7 +4,7 @@
 
 <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
 
-    {{-- Header + date picker --}}
+    {{-- Date picker + Search bar --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
             <h2 class="text-base sm:text-lg font-semibold text-slate-800">Stok Gudang</h2>
@@ -31,6 +31,29 @@
         </form>
     </div>
 
+    {{-- Search bar client-side --}}
+    <div class="mb-4">
+        <div class="relative max-w-sm">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+            </span>
+            <input type="text" id="stockSearch"
+                   placeholder="Cari kode (KB-001) atau nama barang…"
+                   autocomplete="off"
+                   oninput="filterStockCards(this.value)"
+                   class="w-full pl-9 pr-9 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition">
+            <button type="button" id="stockSearchClear"
+                    onclick="document.getElementById('stockSearch').value=''; filterStockCards('');"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
     {{-- Badge tanggal aktif --}}
     <div class="flex items-center gap-2 mb-4">
         <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full
@@ -54,5 +77,52 @@
         'today'        => $today,
     ])
 </div>
+
+<script>
+var stockShowAllMode = false;
+const STOCK_LIMIT = 20;
+
+function applyStockVisibility(query) {
+    const q = (query || '').trim().toLowerCase();
+    document.getElementById('stockSearchClear').classList.toggle('hidden', q === '');
+
+    var shown = 0;
+    document.querySelectorAll('.stock-card').forEach(function (card) {
+        const matchesSearch = q === '' || (card.dataset.search || '').includes(q);
+        const withinLimit   = stockShowAllMode || parseInt(card.dataset.index) < STOCK_LIMIT;
+        card.style.display  = (matchesSearch && withinLimit) ? '' : 'none';
+        if (matchesSearch) { shown++; }
+    });
+
+    var btn = document.getElementById('stockShowAllBtn');
+    if (btn) { btn.style.display = (stockShowAllMode || q !== '') ? 'none' : ''; }
+}
+
+function filterStockCards(query) {
+    applyStockVisibility(query);
+}
+
+function stockShowAll() {
+    stockShowAllMode = true;
+    applyStockVisibility(document.getElementById('stockSearch').value);
+}
+
+function copyCode(btn, code) {
+    navigator.clipboard.writeText(code).then(function () {
+        var icon = btn.querySelector('.copy-icon');
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />';
+        btn.classList.add('bg-green-100', 'text-green-700');
+        btn.classList.remove('bg-slate-100', 'hover:bg-blue-100', 'text-slate-500', 'hover:text-blue-700');
+        setTimeout(function () {
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />';
+            btn.classList.remove('bg-green-100', 'text-green-700');
+            btn.classList.add('bg-slate-100', 'text-slate-500');
+        }, 1500);
+    });
+}
+
+// Init — sembunyikan item > 20 saat halaman load
+document.addEventListener('DOMContentLoaded', function () { applyStockVisibility(''); });
+</script>
 
 @endsection

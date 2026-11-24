@@ -22,13 +22,30 @@ class StockInController extends Controller
     /**
      * List all stock-in entries, newest first.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $stockIns = StockIn::with(['user', 'details', 'receipts'])
-            ->latest()
-            ->paginate(20);
+        $search = $request->query('search', '');
 
-        return view('dash.stock-in.index', compact('stockIns'));
+        $stockIns = StockIn::with(['user', 'details', 'receipts'])
+            ->when($search !== '', function ($q) use ($search) {
+                // Cari berdasarkan kode barang (KB-001 → id=1) atau nama barang
+                $q->whereHas('details', function ($d) use ($search) {
+                    $numericId = (int) preg_replace('/[^0-9]/', '', $search);
+                    $d->where('item_name', 'like', '%'.$search.'%')
+                        ->orWhere(function ($d2) use ($numericId) {
+                            if ($numericId > 0) {
+                                $d2->where('id', $numericId);
+                            } else {
+                                $d2->whereRaw('0=1'); // no match
+                            }
+                        });
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('dash.stock-in.index', compact('stockIns', 'search'));
     }
 
     /**

@@ -136,7 +136,8 @@
                 </button>
             </div>
 
-            <div class="hidden sm:grid grid-cols-[2fr_1fr_1.5fr_1.5fr_auto] gap-2 mb-2 text-xs font-medium text-slate-400 px-1">
+            <div class="hidden sm:grid grid-cols-[1fr_2fr_1fr_1.5fr_1.5fr_auto] gap-2 mb-2 text-xs font-medium text-slate-400 px-1">
+                <span>Kode Barang</span>
                 <span>Nama Barang</span>
                 <span>Qty</span>
                 <span>Harga Satuan (Rp)</span>
@@ -147,7 +148,13 @@
             <div id="itemRows" class="space-y-2">
                 @if ($isEdit && $stockIn->details->count())
                     @foreach ($stockIn->details as $i => $detail)
-                        <div class="item-row grid grid-cols-1 sm:grid-cols-[2fr_1fr_1.5fr_1.5fr_auto] gap-2 items-start">
+                        <div class="item-row grid grid-cols-1 sm:grid-cols-[1fr_2fr_1fr_1.5fr_1.5fr_auto] gap-2 items-start">
+                            <div>
+                                <label class="sm:hidden text-xs text-slate-400 mb-0.5 block">Kode Barang</label>
+                                <input type="text" readonly
+                                       value="{{ $detail->item_code }}"
+                                       class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-500 font-mono cursor-default">
+                            </div>
                             <div>
                                 <label class="sm:hidden text-xs text-slate-400 mb-0.5 block">Nama Barang</label>
                                 <input type="text" name="items[{{ $i }}][item_name]"

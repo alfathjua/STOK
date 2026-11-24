@@ -17,7 +17,8 @@
         <table class="w-full text-sm min-w-[700px]">
             <thead>
                 <tr class="text-left text-xs font-medium text-slate-400 border-b border-slate-200">
-                    <th class="py-3 px-4 sm:px-0 sm:pr-4">#</th>
+                    <th class="py-3 px-4 sm:px-0 sm:pr-4">No.</th>
+                    <th class="py-3 pr-4">Kode Barang</th>
                     <th class="py-3 pr-4">Nama Barang</th>
                     <th class="py-3 pr-4">Perusahaan Penerima</th>
                     <th class="py-3 pr-4">Lokasi</th>
@@ -33,6 +34,11 @@
                     <tr class="hover:bg-slate-50 transition">
                         <td class="py-3 px-4 sm:px-0 sm:pr-4 text-slate-400 text-xs">
                             {{ $loop->iteration + ($stockOuts->firstItem() - 1) }}
+                        </td>
+                        <td class="py-3 pr-4">
+                            <span class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+                                {{ $out->detailStock?->item_code ?? '—' }}
+                            </span>
                         </td>
                         <td class="py-3 pr-4 font-medium text-slate-800">
                             {{ $out->detailStock->item_name ?? '—' }}
@@ -83,9 +89,14 @@
             <div class="border border-slate-200 rounded-xl p-4 bg-white">
                 <div class="flex items-start justify-between gap-2 mb-2">
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800 truncate">
-                            {{ $out->detailStock->item_name ?? '—' }}
-                        </p>
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded flex-shrink-0">
+                                {{ $out->detailStock?->item_code ?? '—' }}
+                            </span>
+                            <p class="text-sm font-semibold text-slate-800 truncate">
+                                {{ $out->detailStock->item_name ?? '—' }}
+                            </p>
+                        </div>
                         <p class="text-xs text-slate-500 mt-0.5">{{ $out->created_at->translatedFormat('d M Y, H:i') }}</p>
                     </div>
                     <span class="flex-shrink-0 text-sm font-bold text-slate-800">

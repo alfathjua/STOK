@@ -19,7 +19,7 @@ class TrackController extends Controller
             ->when($request->filled('user_id'), fn ($q) => $q->where('user_id', $request->user_id))
             ->when($request->filled('action'), fn ($q) => $q->where('action', $request->action))
             ->latest()
-            ->paginate(30)
+            ->paginate(20)
             ->withQueryString();
 
         // Daftar user yang pernah tercatat untuk filter dropdown

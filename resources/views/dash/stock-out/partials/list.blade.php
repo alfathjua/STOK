@@ -12,21 +12,38 @@
         </p>
     </div>
 @else
-    <div class="space-y-3">
-        @foreach ($stocks as $stock)
+    <div id="outCardList" class="space-y-3">
+        @foreach ($stocks as $index => $stock)
             @php
                 $detail     = $stock->detailStock;
                 $totalValue = $detail->price * $stock->qty_remaining;
             @endphp
 
-            <div class="border border-slate-200 rounded-xl p-4 bg-white hover:shadow-sm transition">
+            <div class="border border-slate-200 rounded-xl p-4 bg-white hover:shadow-sm transition out-card"
+                 data-search="{{ strtolower($detail->item_code . ' ' . $detail->item_name) }}"
+                 data-index="{{ $index }}">
                 <div class="flex items-start justify-between gap-3">
 
                     {{-- Info barang --}}
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-semibold text-slate-800 truncate mb-1">
-                            {{ $detail->item_name }}
-                        </h3>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="font-mono text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg flex-shrink-0">
+                                {{ $detail->item_code }}
+                            </span>
+                            <h3 class="text-sm font-semibold text-slate-800 truncate">
+                                {{ $detail->item_name }}
+                            </h3>
+                        </div>
+
+                        {{-- Asal stok --}}
+                        @if ($detail->stockIn?->stock_origin)
+                            <p class="flex items-center gap-1 text-xs text-slate-400 mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 flex-shrink-0">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                </svg>
+                                <span>{{ $detail->stockIn->stock_origin }}</span>
+                            </p>
+                        @endif
 
                         @if ($detail->description)
                             <p class="text-xs text-slate-400 mb-2 line-clamp-1">{{ $detail->description }}</p>
@@ -68,7 +85,17 @@
         @endforeach
     </div>
 
-    <div class="mt-5 pt-4 border-t border-slate-100 text-xs text-slate-500">
-        Total barang tersedia: <strong class="text-slate-700">{{ $stocks->count() }} item</strong>
+    <div class="mt-5 pt-4 border-t border-slate-100 text-xs text-slate-500 flex items-center gap-4">
+        <span>Total barang tersedia: <strong class="text-slate-700">{{ $stocks->count() }} item</strong></span>
+        @if ($stocks->count() > 20)
+            <button type="button" id="outShowAllBtn"
+                    onclick="outShowAll()"
+                    class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+                Lihat Semua ({{ $stocks->count() }} item)
+            </button>
+        @endif
     </div>
 @endif

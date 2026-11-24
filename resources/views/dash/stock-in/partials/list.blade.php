@@ -1,11 +1,11 @@
 <div class="overflow-x-auto -mx-4 sm:mx-0">
-    <table class="w-full text-sm min-w-[640px]">
+    <table class="w-full text-sm min-w-[700px]">
         <thead>
             <tr class="text-left text-xs font-medium text-slate-400 border-b border-slate-200">
-                <th class="py-3 px-4 sm:px-0 sm:pr-4">#</th>
+                <th class="py-3 px-4 sm:px-0 sm:pr-4">No.</th>
                 <th class="py-3 pr-4">Asal Stok</th>
+                <th class="py-3 pr-4">Detail Barang</th>
                 <th class="py-3 pr-4">Dicatat Oleh</th>
-                <th class="py-3 pr-4">Jml Item</th>
                 <th class="py-3 pr-4">Total Nilai</th>
                 <th class="py-3 pr-4">Struk</th>
                 <th class="py-3 pr-4">Tanggal</th>
@@ -16,7 +16,7 @@
             @forelse ($stockIns as $item)
                 <tr class="hover:bg-slate-50 transition">
                     {{-- No --}}
-                    <td class="py-3 px-4 sm:px-0 sm:pr-4 text-slate-400">
+                    <td class="py-3 px-4 sm:px-0 sm:pr-4 text-slate-400 text-xs">
                         {{ $loop->iteration + ($stockIns->firstItem() - 1) }}
                     </td>
 
@@ -25,20 +25,29 @@
                         {{ $item->stock_origin }}
                     </td>
 
+                    {{-- Detail barang dengan kode --}}
+                    <td class="py-3 pr-4">
+                        <div class="space-y-1">
+                            @foreach ($item->details as $detail)
+                                <div class="flex items-center gap-1.5 text-xs">
+                                    <span class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+                                        {{ $detail->item_code }}
+                                    </span>
+                                    <span class="text-slate-700">{{ $detail->item_name }}</span>
+                                    <span class="text-slate-400">×{{ number_format($detail->qty) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </td>
+
                     {{-- User --}}
                     <td class="py-3 pr-4 text-slate-500">
                         {{ $item->user->name ?? '-' }}
                     </td>
 
-                    {{-- Jumlah item lines --}}
-                    <td class="py-3 pr-4 text-slate-700">
-                        {{ $item->details->count() }} item
-                    </td>
-
                     {{-- Total nilai --}}
                     <td class="py-3 pr-4 text-slate-700 whitespace-nowrap">
                         Rp {{ number_format($item->total, 0, ',', '.') }}
-                    </td>
                     </td>
 
                     {{-- Struk --}}

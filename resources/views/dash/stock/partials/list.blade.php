@@ -31,8 +31,8 @@
         </span>
     </div>
 
-    <div class="space-y-3">
-        @foreach ($stocks as $stock)
+    <div id="stockCardList" class="space-y-3">
+        @foreach ($stocks as $index => $stock)
             @php
                 $detail       = $stock->detailStock;
                 $isToday      = $stock->date->toDateString() === $today;
@@ -55,12 +55,26 @@
                 $totalValue = $detail->price * $stock->qty_remaining;
             @endphp
 
-            <div class="border-2 {{ $borderClass }} rounded-xl p-4 bg-white">
+            <div class="border-2 {{ $borderClass }} rounded-xl p-4 bg-white stock-card"
+                 data-search="{{ strtolower($detail->item_code . ' ' . $detail->item_name) }}"
+                 data-index="{{ $index }}">
                 <div class="flex items-start justify-between gap-3">
 
                     {{-- Info barang --}}
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-2 mb-1">
+                            {{-- Kode barang + tombol copy inline --}}
+                            <button type="button"
+                                    onclick="copyCode(this, '{{ $detail->item_code }}')"
+                                    title="Salin kode barang"
+                                    class="inline-flex items-center gap-1.5 font-mono text-xs font-semibold bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 px-2.5 py-1.5 rounded-lg transition active:scale-95 touch-manipulation flex-shrink-0 sm:text-[11px] sm:px-2 sm:py-1">
+                                {{ $detail->item_code }}
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 copy-icon sm:w-3 sm:h-3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                                </svg>
+                                <span class="sm:hidden text-[10px] font-normal ml-0.5">Salin</span>
+                            </button>
+                            </button>
                             <h3 class="text-sm font-semibold text-slate-800 truncate">
                                 {{ $detail->item_name }}
                             </h3>
@@ -68,6 +82,16 @@
                                 {{ $badgeLabel }}
                             </span>
                         </div>
+
+                        {{-- Asal stok --}}
+                        @if ($detail->stockIn?->stock_origin)
+                            <p class="flex items-center gap-1 text-xs text-slate-400 mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 flex-shrink-0">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                </svg>
+                                <span>{{ $detail->stockIn->stock_origin }}</span>
+                            </p>
+                        @endif
 
                         @if ($detail->description)
                             <p class="text-xs text-slate-400 mb-2 line-clamp-1">{{ $detail->description }}</p>
@@ -89,7 +113,7 @@
                         </div>
                     </div>
 
-                    {{-- Qty sisa (read-only) --}}
+                    {{-- Kanan: Sisa stok --}}
                     <div class="text-right flex-shrink-0">
                         <p class="text-[10px] text-slate-400 leading-none mb-0.5">Sisa Stok</p>
                         <p class="text-2xl font-bold leading-none {{ $stock->qty_remaining === 0 ? 'text-red-500' : 'text-slate-800' }}">
@@ -112,6 +136,16 @@
         <span>Total item: <strong class="text-slate-700">{{ $totalItems }}</strong></span>
         <span class="text-green-600">Ada sisa: <strong>{{ $totalAdaSisa }}</strong></span>
         <span class="text-red-500">Habis: <strong>{{ $totalHabis }}</strong></span>
+        @if ($totalItems > 20)
+            <button type="button" id="stockShowAllBtn"
+                    onclick="stockShowAll()"
+                    class="ml-auto inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+                Lihat Semua ({{ $totalItems }} item)
+            </button>
+        @endif
     </div>
 
 @endif

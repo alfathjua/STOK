@@ -52,6 +52,14 @@ class DetailStock extends Model
     }
 
     /**
+     * Kode barang berbasis ID, e.g. KB-001, KB-042.
+     */
+    public function getItemCodeAttribute(): string
+    {
+        return 'KB-'.str_pad($this->id, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Computed total for this line.
      */
     public function getTotalAttribute(): float

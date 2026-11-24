@@ -21,7 +21,7 @@ class StockOutController extends Controller
     {
         $today = now()->toDateString();
 
-        $stocks = Stock::with(['detailStock'])
+        $stocks = Stock::with(['detailStock.stockIn'])
             ->whereHas('detailStock')
             ->where('date', '<=', $today)
             ->orderByDesc('date')
@@ -94,12 +94,26 @@ class StockOutController extends Controller
      */
     public function history(Request $request): View
     {
-        $stockOuts = StockOut::with(['detailStock', 'user'])
-            ->latest()
-            ->paginate(20);
+        $search = $request->query('search', '');
 
-        return view('dash.stock-out.history', [
-            'stockOuts' => $stockOuts,
-        ]);
+        $stockOuts = StockOut::with(['detailStock', 'user'])
+            ->when($search !== '', function ($q) use ($search) {
+                $numericId = (int) preg_replace('/[^0-9]/', '', $search);
+                $q->whereHas('detailStock', function ($d) use ($search, $numericId) {
+                    $d->where('item_name', 'like', '%'.$search.'%')
+                        ->orWhere(function ($d2) use ($numericId) {
+                            if ($numericId > 0) {
+                                $d2->where('id', $numericId);
+                            } else {
+                                $d2->whereRaw('0=1');
+                            }
+                        });
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('dash.stock-out.history', compact('stockOuts', 'search'));
     }
 }

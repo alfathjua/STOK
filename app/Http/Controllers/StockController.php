@@ -24,7 +24,7 @@ class StockController extends Controller
             $selectedDate = $today;
         }
 
-        $stocks = Stock::with(['detailStock'])
+        $stocks = Stock::with(['detailStock.stockIn'])
             ->whereHas('detailStock')
             ->where('date', '<=', $selectedDate)
             ->orderByDesc('date')

@@ -30,10 +30,63 @@
         </div>
     @endif
 
+    {{-- Search bar client-side --}}
+    <div class="mb-4">
+        <div class="relative max-w-sm">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+            </span>
+            <input type="text" id="outSearch"
+                   placeholder="Cari kode (KB-001) atau nama barang…"
+                   autocomplete="off"
+                   oninput="filterOutCards(this.value)"
+                   class="w-full pl-9 pr-9 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition">
+            <button type="button" id="outSearchClear"
+                    onclick="document.getElementById('outSearch').value=''; filterOutCards('');"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
     @include('dash.stock-out.partials.list', ['stocks' => $stocks])
 </div>
 
 {{-- Modal keluar — di luar container agar fixed tidak terjebak stacking context --}}
 @include('dash.stock-out.partials.modal-out')
+
+<script>
+var outShowAllMode = false;
+const OUT_LIMIT = 20;
+
+function applyOutVisibility(query) {
+    const q = (query || '').trim().toLowerCase();
+    document.getElementById('outSearchClear').classList.toggle('hidden', q === '');
+
+    document.querySelectorAll('.out-card').forEach(function (card) {
+        const matchesSearch = q === '' || (card.dataset.search || '').includes(q);
+        const withinLimit   = outShowAllMode || parseInt(card.dataset.index) < OUT_LIMIT;
+        card.style.display  = (matchesSearch && withinLimit) ? '' : 'none';
+    });
+
+    var btn = document.getElementById('outShowAllBtn');
+    if (btn) { btn.style.display = (outShowAllMode || q !== '') ? 'none' : ''; }
+}
+
+function filterOutCards(query) {
+    applyOutVisibility(query);
+}
+
+function outShowAll() {
+    outShowAllMode = true;
+    applyOutVisibility(document.getElementById('outSearch').value);
+}
+
+document.addEventListener('DOMContentLoaded', function () { applyOutVisibility(''); });
+</script>
 
 @endsection
