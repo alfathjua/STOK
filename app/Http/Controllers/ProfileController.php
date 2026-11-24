@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -56,6 +58,40 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.user')
             ->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * AJAX: cek ketersediaan username saat edit profil (kecualikan user sendiri).
+     */
+    public function checkUsername(Request $request): JsonResponse
+    {
+        $username = trim($request->query('username', ''));
+
+        if (strlen($username) < 3) {
+            return response()->json(['available' => true]);
+        }
+
+        $exists = User::where('username', $username)
+            ->where('id', '!=', auth()->id())
+            ->exists();
+
+        return response()->json(['available' => ! $exists]);
+    }
+
+    /**
+     * AJAX: verifikasi password saat ini milik user yang sedang login.
+     */
+    public function checkCurrentPassword(Request $request): JsonResponse
+    {
+        $password = $request->input('current_password', '');
+
+        if (empty($password)) {
+            return response()->json(['valid' => false]);
+        }
+
+        $isValid = Hash::check($password, auth()->user()->password);
+
+        return response()->json(['valid' => $isValid]);
     }
 
     /**

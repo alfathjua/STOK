@@ -48,7 +48,9 @@ class StockOutController extends Controller
             'qty' => ['required', 'integer', 'min:1'],
         ]);
 
-        DB::transaction(function () use ($request): void {
+        $logData = null;
+
+        DB::transaction(function () use ($request, &$logData): void {
             /** @var Stock $stock */
             $stock = Stock::with('detailStock')->findOrFail($request->integer('stock_id'));
 
@@ -71,9 +73,17 @@ class StockOutController extends Controller
 
             // Kurangi sisa stok
             $stock->decrement('qty_remaining', $qty);
+
+            $logData = [
+                'summary' => 'Mengeluarkan '.$qty.' '.$stock->detailStock->item_name.' ke '.$request->company_name,
+                'company' => $request->company_name,
+                'item_name' => $stock->detailStock->item_name,
+                'qty' => $qty,
+                'price' => (float) $stock->detailStock->price,
+            ];
         });
 
-        ActivityLogger::create('Stok Keluar', 'Mengeluarkan stok ke perusahaan penerima.');
+        ActivityLogger::create('Stok Keluar', json_encode($logData));
 
         return redirect()->route('stock-out.index')
             ->with('success', 'Stok keluar berhasil dicatat.');

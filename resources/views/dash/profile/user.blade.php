@@ -16,36 +16,6 @@
         </div>
     @endif
 
-    {{-- ── Header identitas ─────────────────────────────────────── --}}
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div class="bg-blue-900 px-6 py-7 flex items-center gap-4">
-
-            {{-- Avatar --}}
-            <div class="relative flex-shrink-0">
-                @if ($user->avatar)
-                    <img id="avatarPreview"
-                         src="{{ route('private.file', ['path' => $user->avatar]) }}"
-                         alt="Foto profil"
-                         class="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/40">
-                @else
-                    <div id="avatarInitials"
-                         class="w-16 h-16 rounded-full bg-blue-700 ring-2 ring-blue-500/40 flex items-center justify-center text-2xl font-bold text-white">
-                        {{ strtoupper(mb_substr($user->name, 0, 1)) }}
-                    </div>
-                    <img id="avatarPreview" src="" alt="" class="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/40 hidden">
-                @endif
-            </div>
-
-            <div>
-                <h2 class="text-lg font-bold text-white">{{ $user->name }}</h2>
-                <p class="text-blue-200 text-sm">@{{ $user->username }}</p>
-                <span class="inline-block mt-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-700/60 text-blue-100 capitalize">
-                    {{ $user->role === 'director' ? 'Direktur' : 'Mandor' }}
-                </span>
-            </div>
-        </div>
-    </div>
-
     {{-- ── Form Edit Informasi ───────────────────────────────────── --}}
     <div class="bg-white rounded-xl border border-slate-200 p-5 sm:p-6">
         <h3 class="text-sm font-semibold text-slate-700 mb-4">Informasi Profil</h3>
@@ -71,18 +41,14 @@
                 <div class="flex items-center gap-4">
                     {{-- Preview kecil --}}
                     <div class="flex-shrink-0">
-                        @if ($user->avatar)
-                            <img id="infoAvatarPreview"
-                                 src="{{ route('private.file', ['path' => $user->avatar]) }}"
-                                 alt="Foto profil"
-                                 class="w-14 h-14 rounded-full object-cover border border-slate-200">
-                        @else
-                            <div id="infoAvatarInitials"
-                                 class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-bold">
-                                {{ strtoupper(mb_substr($user->name, 0, 1)) }}
-                            </div>
-                            <img id="infoAvatarPreview" src="" alt="" class="w-14 h-14 rounded-full object-cover border border-slate-200 hidden">
-                        @endif
+                        <div id="infoAvatarInitials"
+                             class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-bold {{ $user->avatar ? 'hidden' : '' }}">
+                            {{ strtoupper(mb_substr($user->name, 0, 1)) }}
+                        </div>
+                        <img id="infoAvatarPreview"
+                             src="{{ $user->avatar ? route('private.file', ['path' => $user->avatar]) : '' }}"
+                             alt="Foto profil"
+                             class="w-14 h-14 rounded-full object-cover border border-slate-200 {{ $user->avatar ? '' : 'hidden' }}">
                     </div>
                     <div>
                         <input type="file"
@@ -119,8 +85,10 @@
                 <label for="edit_username" class="block text-sm font-medium text-slate-700 mb-1.5">Username <span class="text-red-500">*</span></label>
                 <input type="text" id="edit_username" name="username"
                        value="{{ old('username', $user->username) }}"
+                       autocomplete="off"
                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400
                               focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition">
+                <p id="usernameStatus" class="text-xs mt-1 hidden"></p>
             </div>
 
             {{-- No. WhatsApp --}}
@@ -159,7 +127,8 @@
                            placeholder="Masukkan password saat ini"
                            class="w-full pl-4 pr-12 py-2.5 border border-slate-300 rounded-lg text-slate-800
                                   placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40
-                                  focus:border-blue-500 transition">
+                                  focus:border-blue-500 transition"
+                           oninput="checkCurrentPassword()">
                     <button type="button" onclick="togglePwdField('current_password', 'eyeCurr')"
                             class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition">
                         <svg id="eyeCurr" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -168,6 +137,7 @@
                         </svg>
                     </button>
                 </div>
+                <p id="currentPwdStatus" class="text-xs mt-1 hidden"></p>
             </div>
 
             {{-- Password baru --}}
@@ -228,29 +198,114 @@
 
 <script>
 (function () {
-    // Preview avatar sebelum upload
+    // ── Preview avatar sebelum upload ────────────────────────────
     window.previewAvatar = function (input) {
         if (!input.files || !input.files[0]) { return; }
         const url = URL.createObjectURL(input.files[0]);
 
-        // Update header
+        // Update header navbar
         const headerInitials = document.getElementById('avatarInitials');
         const headerPreview  = document.getElementById('avatarPreview');
         if (headerInitials) { headerInitials.classList.add('hidden'); }
-        headerPreview.src = url;
-        headerPreview.classList.remove('hidden');
+        if (headerPreview)  { headerPreview.src = url; headerPreview.classList.remove('hidden'); }
 
         // Update form preview
         const formInitials = document.getElementById('infoAvatarInitials');
         const formPreview  = document.getElementById('infoAvatarPreview');
         if (formInitials) { formInitials.classList.add('hidden'); }
-        if (formPreview)  {
-            formPreview.src = url;
-            formPreview.classList.remove('hidden');
-        }
+        if (formPreview)  { formPreview.src = url; formPreview.classList.remove('hidden'); }
     };
 
-    // Konfirmasi password cocok
+    // ── AJAX: cek ketersediaan username ─────────────────────────
+    const usernameInput  = document.getElementById('edit_username');
+    const usernameStatus = document.getElementById('usernameStatus');
+    const checkUrl       = '{{ route('profile.check-username') }}';
+    const originalUsername = usernameInput ? usernameInput.defaultValue : '';
+    let usernameTimer = null;
+
+    function setUsernameStatus(type, text) {
+        usernameStatus.classList.remove('hidden', 'text-green-600', 'text-red-500', 'text-slate-400');
+        usernameStatus.classList.add(type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-slate-400');
+        usernameStatus.textContent = text;
+    }
+
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function () {
+            clearTimeout(usernameTimer);
+            const val = this.value.trim();
+
+            if (val === originalUsername || val.length < 3) {
+                usernameStatus.classList.add('hidden');
+                return;
+            }
+
+            setUsernameStatus('info', 'Memeriksa username…');
+
+            usernameTimer = setTimeout(async function () {
+                try {
+                    const res  = await fetch(checkUrl + '?username=' + encodeURIComponent(val));
+                    const data = await res.json();
+                    if (data.available) {
+                        setUsernameStatus('ok', '✓ Username tersedia');
+                    } else {
+                        setUsernameStatus('err', '✕ Username sudah digunakan, coba yang lain');
+                    }
+                } catch (e) {
+                    usernameStatus.classList.add('hidden');
+                }
+            }, 450);
+        });
+    }
+
+    // ── AJAX: cek password saat ini ──────────────────────────────
+    const currentPwdInput  = document.getElementById('current_password');
+    const currentPwdStatus = document.getElementById('currentPwdStatus');
+    const checkPwdUrl      = '{{ route('profile.check-password') }}';
+    const csrfToken        = document.querySelector('meta[name="csrf-token"]')?.content
+                             || '{{ csrf_token() }}';
+    let pwdTimer = null;
+
+    function setCurrentPwdStatus(type, text) {
+        currentPwdStatus.classList.remove('hidden', 'text-green-600', 'text-red-500', 'text-slate-400');
+        currentPwdStatus.classList.add(type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-slate-400');
+        currentPwdStatus.textContent = text;
+    }
+
+    window.checkCurrentPassword = function () {
+        clearTimeout(pwdTimer);
+        const val = currentPwdInput.value;
+
+        if (val.length === 0) {
+            currentPwdStatus.classList.add('hidden');
+            return;
+        }
+
+        setCurrentPwdStatus('info', 'Memeriksa password…');
+
+        pwdTimer = setTimeout(async function () {
+            try {
+                const res  = await fetch(checkPwdUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ current_password: val }),
+                });
+                const data = await res.json();
+                if (data.valid) {
+                    setCurrentPwdStatus('ok', '✓ Password benar');
+                } else {
+                    setCurrentPwdStatus('err', '✕ Password salah');
+                }
+            } catch (e) {
+                currentPwdStatus.classList.add('hidden');
+            }
+        }, 500);
+    };
+
+    // ── Konfirmasi password cocok ────────────────────────────────
     window.checkPwdConfirm = function () {
         const pwd     = document.getElementById('new_password').value;
         const confirm = document.getElementById('password_confirmation').value;
@@ -268,7 +323,7 @@
         }
     };
 
-    // Toggle show/hide password
+    // ── Toggle show/hide password ────────────────────────────────
     const eyeOpen   = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />';
     const eyeClosed = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />';
 

@@ -54,6 +54,8 @@ Route::middleware('auth')->group(function () {
 
     // Stok Masuk (full resource)
     Route::resource('stock-in', StockInController::class)->except(['show']);
+    // Hapus struk individual via AJAX
+    Route::delete('/receipts/{receipt}', [StockInController::class, 'destroyReceipt'])->name('receipts.destroy');
 
     // Stok Gudang
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
@@ -67,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.user');
     Route::post('/profile/info', [ProfileController::class, 'updateInfo'])->name('profile.update-info');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::get('/profile/check-username', [ProfileController::class, 'checkUsername'])->name('profile.check-username');
+    Route::post('/profile/check-password', [ProfileController::class, 'checkCurrentPassword'])->name('profile.check-password');
 
     // Director-only
     Route::middleware('role:director')->group(function () {

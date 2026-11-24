@@ -265,10 +265,13 @@
             {{-- Preview area untuk foto baru --}}
             <div id="receiptPreviews" class="flex flex-wrap gap-2 mb-4"></div>
 
-            {{-- Hidden input galeri (multi) --}}
-            <input type="file" id="receiptGallery" name="receipts[]"
+            {{-- Trigger input galeri (tidak dikirim ke server, hanya untuk membuka file picker) --}}
+            <input type="file" id="receiptGallery"
                    accept="image/*" multiple class="hidden"
                    onchange="addReceiptFromGallery(this)">
+
+            {{-- Container untuk input file tersembunyi per-file — ini yang dikirim ke server --}}
+            <div id="receiptFileInputs" class="hidden"></div>
 
             <div class="flex flex-wrap gap-3">
                 {{-- Galeri --}}
@@ -432,10 +435,10 @@ function submitForm() {
     }
 
     // 3. Foto Struk Barang — wajib ada file baru atau struk lama (edit mode)
-    const receiptGalleryInput = document.getElementById('receiptGallery');
-    const existingReceipts    = document.querySelectorAll('.receipt-item');
-    const hasReceiptNew       = receiptGalleryInput && receiptGalleryInput.files && receiptGalleryInput.files.length > 0;
-    const hasReceiptExisting  = existingReceipts.length > 0;
+    const existingReceipts   = document.querySelectorAll('.receipt-item');
+    const newReceiptInputs   = document.querySelectorAll('#receiptFileInputs input[type="file"]');
+    const hasReceiptNew      = newReceiptInputs.length > 0;
+    const hasReceiptExisting = existingReceipts.length > 0;
     const receiptErrorEl    = document.getElementById('receiptError');
     const receiptSection    = document.getElementById('receiptSection');
 
@@ -634,19 +637,24 @@ function deleteProofPreview() {
 }
 
 function removeNewReceipt(btn) {
-    // Hapus preview receipt baru dari input
-    btn.closest('.relative').remove();
-    syncReceiptInput();
+    const wrap = btn.closest('.relative');
+    // Hapus hidden input yang terkait (data-index cocok)
+    const idx = wrap.dataset.receiptIdx;
+    const hiddenInput = document.querySelector(`#receiptFileInputs input[data-idx="${idx}"]`);
+    if (hiddenInput) { hiddenInput.remove(); }
+    wrap.remove();
+    renumberReceiptPreviews();
 }
 
-function appendReceiptPreview(url) {
+function appendReceiptPreview(url, fileIdx) {
     const container = document.getElementById('receiptPreviews');
     const wrap = document.createElement('div');
     wrap.className = 'relative group receipt-preview-item';
-    const idx = container.childElementCount + 1;
+    wrap.dataset.receiptIdx = fileIdx;
+    const num = container.childElementCount + 1;
     wrap.innerHTML = `
         <img src="${url}" class="w-16 h-16 object-cover rounded-lg border border-slate-200">
-        <span class="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[9px] flex items-center justify-center rounded-full">${idx}</span>
+        <span class="receipt-num absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[9px] flex items-center justify-center rounded-full">${num}</span>
         <button type="button" onclick="removeNewReceipt(this)"
                 class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white flex items-center justify-center rounded-full text-xs hover:bg-red-600 transition opacity-0 group-hover:opacity-100">
             ✕
@@ -657,6 +665,13 @@ function appendReceiptPreview(url) {
     document.getElementById('receiptError').classList.add('hidden');
     document.getElementById('receiptSection').classList.remove('border-red-300');
     document.getElementById('receiptSection').classList.add('border-slate-200');
+}
+
+function renumberReceiptPreviews() {
+    document.querySelectorAll('#receiptPreviews .receipt-preview-item').forEach((el, i) => {
+        const badge = el.querySelector('.receipt-num');
+        if (badge) { badge.textContent = i + 1; }
+    });
 }
 
 function deleteReceiptAjax(receiptId) {
@@ -676,38 +691,49 @@ function deleteReceiptAjax(receiptId) {
     .then(data => {
         if (data.success) {
             elem?.remove();
+            // Jika semua struk lama dihapus, refresh validasi state
+            if (!document.querySelector('.receipt-item') &&
+                !document.querySelector('#receiptFileInputs input[type="file"]')) {
+                document.getElementById('receiptError').classList.remove('hidden');
+                document.getElementById('receiptSection').classList.add('border-red-300');
+                document.getElementById('receiptSection').classList.remove('border-slate-200');
+            }
         } else {
             alert(data.message || 'Gagal menghapus struk.');
         }
     })
-    .catch(err => {
-        console.error(err);
-        alert('Terjadi kesalahan saat menghapus struk.');
-    });
+    .catch(() => alert('Terjadi kesalahan saat menghapus struk.'));
 }
 
 /* ════════════════════════════════════════
-   Receipt — galeri (multi-file, accumulate via DataTransfer)
+   Receipt — per-file hidden input (reliable cross-browser)
 ════════════════════════════════════════ */
-// Accumulate selected files across multiple picks
-const receiptFiles = new DataTransfer();
+let receiptFileIdx = 0;
+
+function addFileToForm(file) {
+    const idx = receiptFileIdx++;
+    const dt  = new DataTransfer();
+    dt.items.add(file);
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.name = 'receipts[]';
+    input.accept = 'image/*';
+    input.dataset.idx = idx;
+    // Assign the single file via DataTransfer (reliable for single-file assignment)
+    input.files = dt.files;
+    document.getElementById('receiptFileInputs').appendChild(input);
+
+    appendReceiptPreview(URL.createObjectURL(file), idx);
+}
 
 function addReceiptFromGallery(input) {
-    if (!input.files) return;
-    Array.from(input.files).forEach(file => {
-        receiptFiles.items.add(file);
-        appendReceiptPreview(URL.createObjectURL(file));
-    });
-    // Sync hidden input so it carries all selected files on submit
-    syncReceiptInput();
-    input.value = ''; // reset so the same file can be picked again
+    if (!input.files) { return; }
+    Array.from(input.files).forEach(file => addFileToForm(file));
+    input.value = ''; // reset picker agar file yang sama bisa dipilih lagi
 }
 
-function syncReceiptInput() {
-    // The gallery input already has name="receipts[]", we just keep it in sync
-    const galleryInput = document.getElementById('receiptGallery');
-    galleryInput.files = receiptFiles.files;
-}
+function syncReceiptInput() { /* tidak digunakan lagi, disimpan untuk kompatibilitas */ }
 
 /* ════════════════════════════════════════
    Camera modal — shared for proof & receipt
@@ -809,9 +835,7 @@ async function confirmPhoto() {
     } else {
         // Append to receipt accumulator
         const file = new File([blob], `receipt-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        receiptFiles.items.add(file);
-        appendReceiptPreview(dataUrl);
-        syncReceiptInput();
+        addFileToForm(file);
     }
 
     closeCamera();

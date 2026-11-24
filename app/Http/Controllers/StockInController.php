@@ -7,6 +7,7 @@ use App\Models\Receipt;
 use App\Models\Stock;
 use App\Models\StockIn;
 use App\Services\ActivityLogger;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -88,7 +89,15 @@ class StockInController extends Controller
             }
         });
 
-        ActivityLogger::create('Stok Masuk', 'Menambahkan pencatatan stok masuk baru.');
+        ActivityLogger::create('Stok Masuk', json_encode([
+            'summary' => 'Menambahkan stok masuk baru dari '.$request->stock_origin,
+            'origin' => $request->stock_origin,
+            'items' => collect($request->items)->map(fn (array $item) => [
+                'name' => $item['item_name'],
+                'qty' => (int) $item['qty'],
+                'price' => (float) $item['price'],
+            ])->values()->all(),
+        ]));
 
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil disimpan.');
@@ -159,7 +168,15 @@ class StockInController extends Controller
             }
         });
 
-        ActivityLogger::edit('Stok Masuk', 'Memperbarui data pencatatan stok masuk.');
+        ActivityLogger::edit('Stok Masuk', json_encode([
+            'summary' => 'Memperbarui data stok masuk dari '.$request->stock_origin,
+            'origin' => $request->stock_origin,
+            'items' => collect($request->items)->map(fn (array $item) => [
+                'name' => $item['item_name'],
+                'qty' => (int) $item['qty'],
+                'price' => (float) $item['price'],
+            ])->values()->all(),
+        ]));
 
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil diperbarui.');
@@ -170,6 +187,15 @@ class StockInController extends Controller
      */
     public function destroy(StockIn $stockIn): RedirectResponse
     {
+        // Ambil snapshot detail sebelum dihapus untuk log
+        $stockIn->load('details');
+        $deletedOrigin = $stockIn->stock_origin;
+        $deletedItems = $stockIn->details->map(fn (DetailStock $d) => [
+            'name' => $d->item_name,
+            'qty' => $d->qty,
+            'price' => (float) $d->price,
+        ])->values()->all();
+
         DB::transaction(function () use ($stockIn): void {
             if ($stockIn->proof) {
                 Storage::disk('local')->delete($stockIn->proof);
@@ -182,10 +208,25 @@ class StockInController extends Controller
             $stockIn->delete();
         });
 
-        ActivityLogger::delete('Stok Masuk', 'Menghapus pencatatan stok masuk.');
+        ActivityLogger::delete('Stok Masuk', json_encode([
+            'summary' => 'Menghapus data stok masuk dari '.$deletedOrigin,
+            'origin' => $deletedOrigin,
+            'items' => $deletedItems,
+        ]));
 
         return redirect()->route('stock-in.index')
             ->with('success', 'Stok masuk berhasil dihapus.');
+    }
+
+    /**
+     * Delete a single receipt image via AJAX.
+     */
+    public function destroyReceipt(Receipt $receipt): JsonResponse
+    {
+        Storage::disk('local')->delete($receipt->images);
+        $receipt->delete();
+
+        return response()->json(['success' => true]);
     }
 
     /**

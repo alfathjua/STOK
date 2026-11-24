@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Mandor &mdash; JadStock</title>
+    <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes fadeIn {
@@ -167,6 +168,36 @@
                     <p id="pwdMatchStatus" class="text-xs mt-1 hidden"></p>
                 </div>
 
+                {{-- Captcha slider --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                        Verifikasi <span class="text-red-500">*</span>
+                    </label>
+                    <div id="sliderCaptcha" class="relative select-none rounded-lg overflow-hidden border border-slate-300 bg-slate-100" style="height:48px">
+                        {{-- Track --}}
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span id="sliderText" class="text-sm text-slate-400 font-medium tracking-wide transition-opacity duration-300">
+                                Geser ke kanan untuk memverifikasi
+                            </span>
+                        </div>
+                        {{-- Fill bar --}}
+                        <div id="sliderFill" class="absolute inset-y-0 left-0 w-0 bg-blue-100 transition-colors duration-300 rounded-l-lg"></div>
+                        {{-- Handle --}}
+                        <div id="sliderHandle"
+                             class="absolute inset-y-0 left-0 w-12 flex items-center justify-center
+                                    bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-grab active:cursor-grabbing
+                                    shadow transition-colors duration-150 z-10"
+                             style="touch-action:none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </div>
+                    </div>
+                    {{-- Hidden input yang akan divalidasi JS sebelum submit --}}
+                    <input type="hidden" id="captchaPassed" name="_captcha" value="0">
+                    <p id="captchaError" class="text-xs text-red-500 mt-1 hidden">Selesaikan verifikasi terlebih dahulu.</p>
+                </div>
+
                 <button type="submit"
                         id="submitBtn"
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition mt-2">
@@ -251,7 +282,107 @@
         }
     };
 
-    // --- Auto uppercase kunci ---
+    // --- Slider captcha ---
+    (function () {
+        const track   = document.getElementById('sliderCaptcha');
+        const handle  = document.getElementById('sliderHandle');
+        const fill    = document.getElementById('sliderFill');
+        const text    = document.getElementById('sliderText');
+        const input   = document.getElementById('captchaPassed');
+
+        const HANDLE_W   = 48;   // px — lebar handle (w-12)
+        const THRESHOLD  = 0.92; // 92% dianggap berhasil
+
+        let dragging = false;
+        let startX   = 0;
+        let currentX = 0;
+
+        function trackWidth() { return track.offsetWidth - HANDLE_W; }
+
+        function setPos(x) {
+            const max  = trackWidth();
+            const clamped = Math.max(0, Math.min(x, max));
+            handle.style.left = clamped + 'px';
+            fill.style.width  = (clamped + HANDLE_W) + 'px';
+            return clamped;
+        }
+
+        function onSuccess() {
+            handle.style.left = trackWidth() + 'px';
+            fill.style.width  = '100%';
+            fill.classList.remove('bg-blue-100');
+            fill.classList.add('bg-green-200');
+            handle.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            handle.classList.add('bg-green-600', 'cursor-default');
+            handle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>';
+            text.textContent  = '✓ Verifikasi berhasil';
+            text.classList.remove('text-slate-400');
+            text.classList.add('text-green-600');
+            input.value = '1';
+            document.getElementById('captchaError').classList.add('hidden');
+            dragging = false;
+        }
+
+        function onReset() {
+            setPos(0);
+            fill.classList.add('bg-blue-100');
+            fill.classList.remove('bg-green-200');
+            handle.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            handle.classList.remove('bg-green-600', 'cursor-default');
+            handle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 pointer-events-none"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
+            text.textContent  = 'Geser ke kanan untuk memverifikasi';
+            text.classList.add('text-slate-400');
+            text.classList.remove('text-green-600');
+            input.value = '0';
+        }
+
+        // Mouse events
+        handle.addEventListener('mousedown', function (e) {
+            if (input.value === '1') { return; }
+            dragging = true;
+            startX   = e.clientX - currentX;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!dragging) { return; }
+            currentX = setPos(e.clientX - startX);
+            if (currentX / trackWidth() >= THRESHOLD) { onSuccess(); }
+        });
+
+        document.addEventListener('mouseup', function () {
+            if (!dragging) { return; }
+            dragging = false;
+            if (input.value !== '1') { currentX = 0; onReset(); }
+        });
+
+        // Touch events
+        handle.addEventListener('touchstart', function (e) {
+            if (input.value === '1') { return; }
+            dragging = true;
+            startX   = e.touches[0].clientX - currentX;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function (e) {
+            if (!dragging) { return; }
+            currentX = setPos(e.touches[0].clientX - startX);
+            if (currentX / trackWidth() >= THRESHOLD) { onSuccess(); }
+        }, { passive: true });
+
+        document.addEventListener('touchend', function () {
+            if (!dragging) { return; }
+            dragging = false;
+            if (input.value !== '1') { currentX = 0; onReset(); }
+        });
+    })();
+
+    // Guard submit — cek captcha sebelum form dikirim
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        if (document.getElementById('captchaPassed').value !== '1') {
+            e.preventDefault();
+            document.getElementById('captchaError').classList.remove('hidden');
+        }
+    });
     document.getElementById('key').addEventListener('input', function () {
         this.value = this.value.toUpperCase();
     });

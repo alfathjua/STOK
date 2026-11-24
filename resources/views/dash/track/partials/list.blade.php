@@ -16,6 +16,12 @@
             @php
                 $color = $log->action_color; // green | blue | red
 
+                // Stok Keluar = merah, Stok Masuk = hijau, Edit tetap biru
+                if ($log->action === 'create') {
+                    $isStockOut = \Illuminate\Support\Str::contains(strtolower($log->feature), 'keluar');
+                    $color      = $isStockOut ? 'red' : 'green';
+                }
+
                 $borderClass = match ($color) {
                     'green' => 'border-green-400',
                     'blue'  => 'border-blue-400',
@@ -36,6 +42,16 @@
                     'red'   => 'bg-red-400',
                     default => 'bg-slate-300',
                 };
+
+                // Decode description — bisa JSON terstruktur atau plain text lama
+                $decoded  = json_decode($log->description, true);
+                $isJson   = is_array($decoded);
+                $summary  = $isJson ? ($decoded['summary'] ?? $log->description) : $log->description;
+                $items    = $isJson && isset($decoded['items']) ? $decoded['items'] : [];
+                $origin   = $isJson && isset($decoded['origin'])  ? $decoded['origin']  : null;
+                $company  = $isJson && isset($decoded['company']) ? $decoded['company'] : null;
+                // Stok Keluar: single item di root
+                $singleItem = $isJson && isset($decoded['item_name']) ? $decoded : null;
             @endphp
 
             <div class="border-l-4 {{ $borderClass }} bg-white rounded-r-xl px-4 py-3 flex items-start gap-3 shadow-sm">
@@ -54,11 +70,65 @@
                         </span>
                         {{-- Fitur --}}
                         <span class="text-xs font-medium text-slate-700">{{ $log->feature }}</span>
+
+                        {{-- Asal / Tujuan --}}
+                        @if ($origin)
+                            <span class="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                </svg>
+                                {{ $origin }}
+                            </span>
+                        @elseif ($company)
+                            <span class="inline-flex items-center gap-1 text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                                </svg>
+                                {{ $company }}
+                            </span>
+                        @endif
                     </div>
 
-                    <p class="text-sm text-slate-600">{{ $log->description }}</p>
+                    {{-- Summary --}}
+                    <p class="text-sm text-slate-600">{{ $summary }}</p>
 
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-slate-400">
+                    {{-- Detail item Stok Masuk (array) --}}
+                    @if (count($items) > 0)
+                        <div class="mt-2 space-y-1">
+                            @foreach ($items as $item)
+                                <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                                    </svg>
+                                    <span class="font-medium text-slate-700 flex-1">{{ $item['name'] }}</span>
+                                    <span class="font-semibold text-slate-800">{{ number_format($item['qty']) }} pcs</span>
+                                    @if (!empty($item['price']) && $item['price'] > 0)
+                                        <span class="text-slate-400">·</span>
+                                        <span class="text-slate-500">Rp {{ number_format($item['price'], 0, ',', '.') }}</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- Detail item Stok Keluar (single) --}}
+                    @if ($singleItem)
+                        <div class="mt-2">
+                            <div class="flex items-center gap-2 text-xs text-slate-600 bg-red-50 rounded-lg px-3 py-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-red-400 flex-shrink-0">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                                </svg>
+                                <span class="font-medium text-slate-700 flex-1">{{ $singleItem['item_name'] }}</span>
+                                <span class="font-semibold text-red-700">-{{ number_format($singleItem['qty']) }} pcs</span>
+                                @if (!empty($singleItem['price']) && $singleItem['price'] > 0)
+                                    <span class="text-slate-400">·</span>
+                                    <span class="text-slate-500">Rp {{ number_format($singleItem['price'], 0, ',', '.') }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-2 text-xs text-slate-400">
                         <span class="flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
