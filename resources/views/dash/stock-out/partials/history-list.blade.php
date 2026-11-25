@@ -1,8 +1,10 @@
 @if ($stockOuts->isEmpty())
     <div class="flex flex-col items-center justify-center py-16 text-center">
         <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-slate-400">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-7 h-7 text-slate-400">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
         </div>
         <p class="text-sm font-medium text-slate-600">Belum ada riwayat stok keluar</p>
@@ -12,7 +14,6 @@
         </p>
     </div>
 @else
-    {{-- Desktop: table --}}
     <div class="hidden sm:block overflow-x-auto -mx-4 sm:mx-0">
         <table class="w-full text-sm min-w-[700px]">
             <thead>
@@ -48,13 +49,14 @@
                         </td>
                         <td class="py-3 pr-4">
                             @if ($out->map_url)
-                                <a href="{{ $out->map_url }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium transition">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                <a href="{{ $out->map_url }}" target="_blank" rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                                     </svg>
                                     Lihat Peta
                                 </a>
@@ -83,21 +85,22 @@
         </table>
     </div>
 
-    {{-- Mobile: card list --}}
     <div class="sm:hidden space-y-3">
         @foreach ($stockOuts as $out)
             <div class="border border-slate-200 rounded-xl p-4 bg-white">
                 <div class="flex items-start justify-between gap-2 mb-2">
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5 mb-0.5">
-                            <span class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded flex-shrink-0">
+                            <span
+                                class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded flex-shrink-0">
                                 {{ $out->detailStock?->item_code ?? '—' }}
                             </span>
                             <p class="text-sm font-semibold text-slate-800 truncate">
                                 {{ $out->detailStock->item_name ?? '—' }}
                             </p>
                         </div>
-                        <p class="text-xs text-slate-500 mt-0.5">{{ $out->created_at->translatedFormat('d M Y, H:i') }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $out->created_at->translatedFormat('d M Y, H:i') }}
+                        </p>
                     </div>
                     <span class="flex-shrink-0 text-sm font-bold text-slate-800">
                         ×{{ number_format($out->qty, 0, ',', '.') }}
@@ -111,7 +114,8 @@
                     </span>
                     <span>
                         <span class="text-slate-400">Total:</span>
-                        <span class="font-medium text-slate-700">Rp {{ number_format($out->qty * $out->price, 0, ',', '.') }}</span>
+                        <span class="font-medium text-slate-700">Rp
+                            {{ number_format($out->qty * $out->price, 0, ',', '.') }}</span>
                     </span>
                     <span>
                         <span class="text-slate-400">Oleh:</span>
@@ -120,13 +124,14 @@
                 </div>
 
                 @if ($out->map_url)
-                    <a href="{{ $out->map_url }}"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    <a href="{{ $out->map_url }}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-3.5 h-3.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                         </svg>
                         Lihat Lokasi di Peta
                     </a>
@@ -135,19 +140,18 @@
         @endforeach
     </div>
 
-    {{-- Pagination --}}
     @if ($stockOuts->hasPages())
         <div class="mt-5 pt-4 border-t border-slate-100">
             {{ $stockOuts->links() }}
         </div>
     @endif
 
-    {{-- Summary footer --}}
     @php
-        $grandTotal = $stockOuts->sum(fn ($o) => $o->qty * $o->price);
+        $grandTotal = $stockOuts->sum(fn($o) => $o->qty * $o->price);
     @endphp
     <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-4 text-xs text-slate-500">
         <span>Total transaksi: <strong class="text-slate-700">{{ $stockOuts->total() }}</strong></span>
-        <span>Total nilai: <strong class="text-slate-700">Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong></span>
+        <span>Total nilai: <strong class="text-slate-700">Rp
+                {{ number_format($grandTotal, 0, ',', '.') }}</strong></span>
     </div>
 @endif

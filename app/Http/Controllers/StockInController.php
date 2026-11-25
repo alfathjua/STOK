@@ -6,12 +6,14 @@ use App\Models\DetailStock;
 use App\Models\Receipt;
 use App\Models\Stock;
 use App\Models\StockIn;
+use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -28,7 +30,6 @@ class StockInController extends Controller
 
         $stockIns = StockIn::with(['user', 'details', 'receipts'])
             ->when($search !== '', function ($q) use ($search) {
-                // Cari berdasarkan kode barang (KB-001 → id=1) atau nama barang
                 $q->whereHas('details', function ($d) use ($search) {
                     $numericId = (int) preg_replace('/[^0-9]/', '', $search);
                     $d->where('item_name', 'like', '%'.$search.'%')
@@ -36,7 +37,7 @@ class StockInController extends Controller
                             if ($numericId > 0) {
                                 $d2->where('id', $numericId);
                             } else {
-                                $d2->whereRaw('0=1'); // no match
+                                $d2->whereRaw('0=1');
                             }
                         });
                 });
@@ -78,9 +79,12 @@ class StockInController extends Controller
                 $proofPath = $this->compressAndStore($request->file('proof'), 'proof');
             }
 
+            /** @var User $user */
+            $user = Auth::user();
+
             /** @var StockIn $stockIn */
             $stockIn = StockIn::create([
-                'user_id' => auth()->id(),
+                'user_id' => $user->id,
                 'stock_origin' => $request->stock_origin,
                 'proof' => $proofPath,
             ]);
@@ -207,7 +211,6 @@ class StockInController extends Controller
     public function destroy(StockIn $stockIn): RedirectResponse
     {
         $this->authorizeStockIn($stockIn);
-        // Ambil snapshot detail sebelum dihapus untuk log
         $stockIn->load('details');
         $deletedOrigin = $stockIn->stock_origin;
         $deletedItems = $stockIn->details->map(fn (DetailStock $d) => [
@@ -244,7 +247,6 @@ class StockInController extends Controller
      */
     public function destroyReceipt(Receipt $receipt): JsonResponse
     {
-        // Semua foreman boleh menghapus struk (tidak ada restriction ownership).
         Storage::disk('local')->delete($receipt->images);
         $receipt->delete();
 
@@ -330,8 +332,6 @@ class StockInController extends Controller
     private function compressAndStore(UploadedFile $file, string $directory): string
     {
         $source = $this->gdCreateFromFile($file->getRealPath(), $file->getMimeType());
-
-        // Resize if wider than 1200 px (keep aspect ratio)
         $origW = imagesx($source);
         $origH = imagesy($source);
         $maxW = 1200;
@@ -344,9 +344,8 @@ class StockInController extends Controller
             $source = $canvas;
         }
 
-        // Find quality that yields < 100 KB
         $quality = 80;
-        $targetBytes = 100 * 1024; // 100 KB
+        $targetBytes = 100 * 1024;
 
         do {
             ob_start();
@@ -357,7 +356,6 @@ class StockInController extends Controller
 
         imagedestroy($source);
 
-        // Build path and store via Storage
         $filename = Str::uuid().'.webp';
         $storagePath = $directory.'/'.$filename;
 
@@ -374,7 +372,7 @@ class StockInController extends Controller
         return match (true) {
             str_contains($mime, 'png') => imagecreatefrompng($path),
             str_contains($mime, 'webp') => imagecreatefromwebp($path),
-            default => imagecreatefromjpeg($path), // jpg / jpeg
+            default => imagecreatefromjpeg($path),
         };
     }
 }

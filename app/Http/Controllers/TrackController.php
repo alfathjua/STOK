@@ -22,7 +22,6 @@ class TrackController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Daftar user yang pernah tercatat untuk filter dropdown
         $users = User::whereIn('id',
             ActivityLog::distinct()->pluck('user_id')
         )->orderBy('name')->get(['id', 'name']);

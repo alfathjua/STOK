@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Stock;
 use App\Models\StockOut;
+use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -61,10 +63,13 @@ class StockOutController extends Controller
                 $qty = $stock->qty_remaining;
             }
 
+            /** @var User $user */
+            $user = Auth::user();
+
             StockOut::create([
                 'stock_id' => $stock->id,
                 'detail_stock_id' => $stock->detail_stock_id,
-                'user_id' => auth()->id(),
+                'user_id' => $user->id,
                 'company_name' => $request->company_name,
                 'map_url' => $request->map_url ?: null,
                 'qty' => $qty,

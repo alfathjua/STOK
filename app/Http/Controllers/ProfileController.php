@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,8 +21,11 @@ class ProfileController extends Controller
      */
     public function show(): View
     {
+        /** @var User $user */
+        $user = Auth::user();
+
         return view('dash.profile.user', [
-            'user' => auth()->user(),
+            'user' => $user,
         ]);
     }
 
@@ -30,7 +34,8 @@ class ProfileController extends Controller
      */
     public function updateInfo(Request $request): RedirectResponse
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -72,7 +77,7 @@ class ProfileController extends Controller
         }
 
         $exists = User::where('username', $username)
-            ->where('id', '!=', auth()->id())
+            ->where('id', '!=', Auth::id())
             ->exists();
 
         return response()->json(['available' => ! $exists]);
@@ -89,7 +94,9 @@ class ProfileController extends Controller
             return response()->json(['valid' => false]);
         }
 
-        $isValid = Hash::check($password, auth()->user()->password);
+        /** @var User $user */
+        $user = Auth::user();
+        $isValid = Hash::check($password, $user->password);
 
         return response()->json(['valid' => $isValid]);
     }
@@ -99,7 +106,8 @@ class ProfileController extends Controller
      */
     public function updatePassword(Request $request): RedirectResponse
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         $request->validate([
             'current_password' => ['required', 'string', 'current_password'],

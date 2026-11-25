@@ -8,13 +8,6 @@ use Illuminate\View\View;
 
 class StockController extends Controller
 {
-    /**
-     * Tampilkan daftar stok gudang berdasarkan tanggal.
-     *
-     * - Default: hari ini
-     * - User bisa filter ke tanggal sebelumnya, tidak bisa ke masa depan
-     * - Menampilkan record stocks terbaru per item dengan date <= selectedDate
-     */
     public function index(Request $request): View
     {
         $today = now()->toDateString();
