@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JadStock &mdash; CV. Jada Team Sedaya</title>
+    <title>JadStock | CV. Jada Team Sedaya</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes fadeInUp {

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk &mdash; JadStock</title>
+    <title>Masuk | JadStock</title>
     <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

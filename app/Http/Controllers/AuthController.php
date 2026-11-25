@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -34,27 +36,54 @@ class AuthController extends Controller
     /**
      * Authenticate the user with username + password.
      *
-     * Pesan error sengaja dibuat generik untuk mencegah username enumeration.
+     * Pesan error dibedakan sesuai penyebab kegagalan:
+     * - field kosong       → "Username wajib diisi." / "Password wajib diisi."
+     * - username tidak ada → "Username tidak ditemukan."
+     * - password salah     → "Password salah."
+     *
+     * Semua pesan dikirim lewat key 'login' agar tampil di alert yang sama.
      */
     public function authenticate(Request $request)
     {
-        $request->validate([
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ]);
+        $username = trim((string) $request->input('username', ''));
+        $password = (string) $request->input('password', '');
 
-        if (! Auth::attempt([
-            'username' => $request->username,
-            'password' => $request->password,
-        ], $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['login' => 'Username atau password salah.'])
-                ->withInput($request->only('username'));
+        if ($username === '' && $password === '') {
+            return $this->loginFailed('Username dan password wajib diisi.', $username);
         }
 
+        if ($username === '') {
+            return $this->loginFailed('Username wajib diisi.', $username);
+        }
+
+        if ($password === '') {
+            return $this->loginFailed('Password wajib diisi.', $username);
+        }
+
+        $user = User::where('username', $username)->first();
+
+        if (! $user) {
+            return $this->loginFailed('Username tidak ditemukan.', $username);
+        }
+
+        if (! Hash::check($password, $user->password)) {
+            return $this->loginFailed('Password salah.', $username);
+        }
+
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
         return redirect()->route('dashboard');
+    }
+
+    /**
+     * Kembali ke form login dengan pesan error dan username yang tadi diisi.
+     */
+    private function loginFailed(string $message, string $username)
+    {
+        return back()
+            ->withErrors(['login' => $message])
+            ->withInput(['username' => $username]);
     }
 
     /**
