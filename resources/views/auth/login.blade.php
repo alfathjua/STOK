@@ -45,14 +45,6 @@
             <p class="text-sm text-slate-500 mb-8">Silakan masuk untuk mengakses dashboard.</p>
 
             {{-- Error alert --}}
-            @if ($errors->any())
-                <div class="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 flex-shrink-0 mt-0.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                    </svg>
-                    <span>{{ $errors->first() }}</span>
-                </div>
-            @endif
 
             <form action="{{ route('authenticate') }}" method="POST" class="space-y-5">
                 @csrf
@@ -74,12 +66,9 @@
                             autocomplete="username"
                             autofocus
                             placeholder="Masukkan username"
-                            class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition @error('username') border-red-400 @else border-slate-300 @enderror"
+                            class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition border-slate-300"
                         >
                     </div>
-                    @error('username')
-                        <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 {{-- Password --}}
@@ -97,7 +86,7 @@
                             name="password"
                             autocomplete="current-password"
                             placeholder="Masukkan password"
-                            class="w-full pl-10 pr-12 py-2.5 border rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition @error('password') border-red-400 @else border-slate-300 @enderror"
+                            class="w-full pl-10 pr-12 py-2.5 border rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition border-slate-300"
                         >
                         <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition">
                             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -106,10 +95,17 @@
                             </svg>
                         </button>
                     </div>
-                    @error('password')
-                        <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
-                    @enderror
                 </div>
+
+                {{-- Error generik login --}}
+                @error('login')
+                    <div class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                        {{ $message }}
+                    </div>
+                @enderror
 
                 {{-- Remember me --}}
                 <div class="flex items-center">

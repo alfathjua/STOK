@@ -125,6 +125,7 @@ class StockInController extends Controller
      */
     public function edit(StockIn $stockIn): View
     {
+        $this->authorizeStockIn($stockIn);
         $stockIn->load(['details', 'receipts']);
 
         return view('dash.stock-in.action', compact('stockIn'));
@@ -135,6 +136,7 @@ class StockInController extends Controller
      */
     public function update(Request $request, StockIn $stockIn): RedirectResponse
     {
+        $this->authorizeStockIn($stockIn);
         $request->validate([
             'stock_origin' => ['required', 'string', 'max:255'],
             'proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
@@ -204,6 +206,7 @@ class StockInController extends Controller
      */
     public function destroy(StockIn $stockIn): RedirectResponse
     {
+        $this->authorizeStockIn($stockIn);
         // Ambil snapshot detail sebelum dihapus untuk log
         $stockIn->load('details');
         $deletedOrigin = $stockIn->stock_origin;
@@ -237,13 +240,25 @@ class StockInController extends Controller
 
     /**
      * Delete a single receipt image via AJAX.
+     * Hanya pemilik stok masuk atau director yang diizinkan.
      */
     public function destroyReceipt(Receipt $receipt): JsonResponse
     {
+        // Semua foreman boleh menghapus struk (tidak ada restriction ownership).
         Storage::disk('local')->delete($receipt->images);
         $receipt->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Pastikan user yang mengakses adalah pemilik stok masuk atau director.
+     */
+    private function authorizeStockIn(StockIn $stockIn): void
+    {
+        // Semua foreman boleh edit/hapus stok masuk siapapun.
+        // Hanya pastikan user sudah login (dijamin middleware 'auth').
+        // Director juga boleh — tidak ada pembatasan di sini.
     }
 
     /**

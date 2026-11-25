@@ -53,14 +53,16 @@ class RegisterController extends Controller
                 ->withInput($request->except('password', 'password_confirmation'));
         }
 
-        // Buat user foreman
+        // Buat user foreman — role diset secara eksplisit, bukan via mass assignment
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->username.'@foreman.local', // placeholder, tidak dipakai login
             'password' => Hash::make($request->password),
-            'role' => 'foreman',
         ]);
+
+        $user->role = 'foreman';
+        $user->save();
 
         // Tandai kunci sebagai terpakai
         $foremanKey->update([

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,9 +34,7 @@ class AuthController extends Controller
     /**
      * Authenticate the user with username + password.
      *
-     * Returns a specific error message depending on what went wrong:
-     *  - username not found → "Username tidak ditemukan."
-     *  - wrong password     → "Password salah."
+     * Pesan error sengaja dibuat generik untuk mencegah username enumeration.
      */
     public function authenticate(Request $request)
     {
@@ -46,20 +43,12 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('username', $request->username)->first();
-
-        if (! $user) {
-            return back()
-                ->withErrors(['username' => 'Username tidak ditemukan.'])
-                ->withInput($request->only('username'));
-        }
-
         if (! Auth::attempt([
             'username' => $request->username,
             'password' => $request->password,
         ], $request->boolean('remember'))) {
             return back()
-                ->withErrors(['password' => 'Password salah.'])
+                ->withErrors(['login' => 'Username atau password salah.'])
                 ->withInput($request->only('username'));
         }
 

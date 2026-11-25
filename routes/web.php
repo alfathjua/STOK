@@ -21,12 +21,12 @@ use Illuminate\Support\Facades\Storage;
 Route::get('/', [AuthController::class, 'index'])->name('index');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate')->middleware('throttle:5,1');
 
 // Register foreman (public — butuh kunci valid)
 Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
-Route::post('/register', [RegisterController::class, 'register'])->name('register.store');
-Route::get('/register/check-username', [RegisterController::class, 'checkUsername'])->name('register.check-username');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.store')->middleware('throttle:3,5');
+Route::get('/register/check-username', [RegisterController::class, 'checkUsername'])->name('register.check-username')->middleware('throttle:30,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -69,8 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.user');
     Route::post('/profile/info', [ProfileController::class, 'updateInfo'])->name('profile.update-info');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
-    Route::get('/profile/check-username', [ProfileController::class, 'checkUsername'])->name('profile.check-username');
-    Route::post('/profile/check-password', [ProfileController::class, 'checkCurrentPassword'])->name('profile.check-password');
+    Route::get('/profile/check-username', [ProfileController::class, 'checkUsername'])->name('profile.check-username')->middleware('throttle:30,1');
+    Route::post('/profile/check-password', [ProfileController::class, 'checkCurrentPassword'])->name('profile.check-password')->middleware('throttle:10,1');
 
     // Director-only
     Route::middleware('role:director')->group(function () {

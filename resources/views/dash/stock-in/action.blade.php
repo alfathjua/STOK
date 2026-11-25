@@ -249,7 +249,7 @@
             {{-- Error hint --}}
             <p id="receiptError" class="hidden text-red-500 text-xs mb-3">Minimal satu foto struk wajib diunggah.</p>
 
-            {{-- Existing receipts (edit mode) --}
+            {{-- Existing receipts (edit mode) --}}
             @if ($isEdit && $stockIn->receipts->count())
                 <div id="existingReceiptsWrap" class="flex flex-wrap gap-2 mb-4">
                     @foreach ($stockIn->receipts as $receipt)
@@ -260,13 +260,17 @@
                                 {{ $loop->iteration }}
                             </span>
                             <button type="button" onclick="deleteReceiptAjax({{ $receipt->id }})"
-                                    class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white flex items-center justify-center rounded-full text-xs hover:bg-red-600 transition opacity-0 group-hover:opacity-100">
+                                    class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white flex items-center justify-center rounded-full text-xs hover:bg-red-600 transition sm:opacity-0 sm:group-hover:opacity-100 opacity-100">
                                 ✕
                             </button>
                         </div>
                     @endforeach
-                    <p class="w-full text-xs text-slate-400 mt-1">Struk sudah ada. Tambah baru akan ditambahkan. Hover untuk hapus.</p>
+                    <p class="w-full text-xs text-slate-400 mt-1">
+                        Struk tersimpan ({{ $stockIn->receipts->count() }}). Tambah foto baru akan ditambahkan. <span class="hidden sm:inline">Hover</span><span class="sm:hidden">Tekan lama</span> untuk hapus.
+                    </p>
                 </div>
+            @elseif ($isEdit)
+                <p class="text-xs text-slate-400 mb-4">Belum ada struk tersimpan. Upload minimal satu struk.</p>
             @endif
 
             {{-- Preview area untuk foto baru --}}
@@ -458,9 +462,7 @@ function submitForm() {
         receiptErrorEl.classList.add('hidden');
         receiptSection.classList.remove('border-red-300');
         receiptSection.classList.add('border-slate-200');
-    }
-
-    // 4. Data Barang — setiap baris wajib terisi nama, qty, dan harga
+    }    // 4. Data Barang — setiap baris wajib terisi nama, qty, dan harga
     const rows = document.querySelectorAll('.item-row');
     rows.forEach((row, idx) => {
         const nameInput  = row.querySelector('input[name*="item_name"]');
