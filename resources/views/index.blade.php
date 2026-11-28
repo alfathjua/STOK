@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JadStock | CV. Jada Team Sedaya</title>
+    <title>JaStock | CV. Jada Team Sedaya</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes fadeInUp {
@@ -66,10 +66,10 @@
 <body class="bg-blue-900 min-h-screen flex flex-col items-center justify-center overflow-hidden relative">
     <div
         class="fade-up logo-pulse w-28 h-28 rounded-2xl bg-blue-800/60 ring-1 ring-blue-700/60 flex items-center justify-center p-5 mb-8">
-        <img src="{{ asset('logo.webp') }}" alt="JadStock" class="w-full h-full object-contain">
+        <img src="{{ asset('logo.webp') }}" alt="JaStock" class="w-full h-full object-contain">
     </div>
     <h1 class="fade-up-d1 text-5xl sm:text-6xl font-bold text-white tracking-tight mb-3">
-        JadStock
+        JaStock
     </h1>
 
     <p class="fade-up-d2 text-slate-300 text-base sm:text-lg tracking-wide">

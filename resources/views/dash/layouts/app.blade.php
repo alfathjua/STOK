@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Beranda') | JadStock</title>
+    <title>@yield('title', 'Beranda') | JaStock</title>
     <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
@@ -93,11 +93,11 @@
 
         <div class="flex items-center h-16 bg-blue-900 border-b-2 border-blue-600 overflow-hidden">
             <div class="flex items-center justify-center w-16 flex-shrink-0">
-                <img src="{{ asset('logo.webp') }}" alt="JadStock" class="w-10 h-10 object-contain">
+                <img src="{{ asset('logo.webp') }}" alt="JaStock" class="w-10 h-10 object-contain">
             </div>
             <span
                 class="sidebar-label text-lg font-extrabold tracking-tight text-white whitespace-nowrap overflow-hidden transition-all duration-200">
-                JadStock
+                JaStock
             </span>
         </div>
 

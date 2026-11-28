@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Mandor | JadStock</title>
+    <title>Daftar Mandor | JaStock</title>
     <link rel="icon" type="image/webp" href="{{ asset('favicon.webp') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -37,9 +37,9 @@
         <div class="hidden lg:flex lg:w-1/2 bg-blue-900 flex-col items-center justify-center px-12">
             <div
                 class="fade-in w-28 h-28 rounded-2xl bg-blue-800/60 ring-1 ring-blue-700/60 flex items-center justify-center p-5 mb-7">
-                <img src="{{ asset('logo.webp') }}" alt="JadStock" class="w-full h-full object-contain">
+                <img src="{{ asset('logo.webp') }}" alt="JaStock" class="w-full h-full object-contain">
             </div>
-            <h1 class="fade-in text-5xl font-bold text-white tracking-tight mb-3">JadStock</h1>
+            <h1 class="fade-in text-5xl font-bold text-white tracking-tight mb-3">JaStock</h1>
             <p class="fade-in-d1 text-slate-300 text-base tracking-wide">Daftar sebagai Mandor / Foreman</p>
         </div>
 
@@ -48,9 +48,9 @@
             <div class="lg:hidden mb-7 flex flex-col items-center">
                 <div
                     class="w-16 h-16 rounded-xl bg-blue-800 ring-1 ring-blue-700 flex items-center justify-center p-3 mb-3">
-                    <img src="{{ asset('logo.webp') }}" alt="JadStock" class="w-full h-full object-contain">
+                    <img src="{{ asset('logo.webp') }}" alt="JaStock" class="w-full h-full object-contain">
                 </div>
-                <span class="text-xl font-bold text-blue-900">JadStock</span>
+                <span class="text-xl font-bold text-blue-900">JaStock</span>
             </div>
 
             <div class="w-full max-w-sm">
